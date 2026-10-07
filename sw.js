@@ -1,5 +1,5 @@
-/* Salesman Order service worker v1.5 — app shell offline; server calls are never cached. */
-const VERSION = '1.5';
+/* Salesman Order service worker v1.5.1 — app shell offline; server calls are never cached. */
+const VERSION = '1.5.1';
 const CACHE = 'salesman-order-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.png'];
 
