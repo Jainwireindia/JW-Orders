@@ -123,8 +123,8 @@ label.mut{display:block;margin-top:8px}
   <div id="pick" class="hide">
     <div class="chip" id="pickName"></div>
     <div class="row">
-      <input id="qtyIn" type="number" inputmode="decimal" placeholder="Qty" enterkeyhint="done" style="width:110px">
-      <select id="unitIn" style="width:120px"></select>
+      <input id="qtyIn" type="text" placeholder="Qty (e.g. 10 or 100 kg)" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" style="width:150px">
+      <input id="unitIn" list="unitList" placeholder="Unit" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:96px">
       <button class="b" id="addLine" type="button" style="flex:1">Add</button>
     </div>
     <button class="b sec" id="cancelPick" type="button" style="margin-top:8px;width:100%">Pick a different item</button>
@@ -180,6 +180,10 @@ label.mut{display:block;margin-top:8px}
     <textarea id="admImpTx"></textarea>
     <button class="b" id="admImpGo" type="button" style="width:100%;margin-top:8px">Import</button>
     <div id="admImpMsg" class="mut" style="margin-top:6px"></div>
+    <label class="mut" for="admFile">…or import a whole master-list file (JW Orders import file, or the Order to Sheet master-list export)</label>
+    <input type="file" id="admFile" accept=".json,application/json">
+    <div id="admFileInfo" class="mut" style="margin-top:6px"></div>
+    <button class="b hide" id="admFileGo" type="button" style="width:100%;margin-top:8px">Import file</button>
     <button class="b sec" id="admDlCsv" type="button" style="width:100%;margin-top:10px">Download item list (CSV)</button>
   </section>
   <section class="card">
@@ -195,13 +199,21 @@ label.mut{display:block;margin-top:8px}
 </div>
 
 </main>
+<datalist id="unitList"><option>Nos</option><option>Roll</option><option>Bundle</option><option>Sheet</option><option>Kg</option><option>Ton</option><option>Mtr</option><option>Ft</option></datalist>
 <div class="bar"><button class="b" id="btnSend" type="button">Send to WhatsApp &amp; save</button></div>
 
 <script>
 'use strict';
-const APP_VERSION='1.2.3';
+const APP_VERSION='1.4';
 const DEFAULT_SERVER_URL='https://script.google.com/macros/s/AKfycbwA-FsJ4gmehfsEs1Z3-8ZwN7x9PTbJGoVp_T8HvcLkMKI3CtDPIUiZNst2iX4JFdgL/exec';          // ← paste the Apps Script web app link here; then salesmen only type their password
-const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Pkt'];
+const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Ft'];
+const UNIT_WORDS={no:'Nos',nos:'Nos',pc:'Nos',pcs:'Nos',piece:'Nos',pieces:'Nos',roll:'Roll',rolls:'Roll',bundle:'Bundle',bundles:'Bundle',bdl:'Bundle',sheet:'Sheet',sheets:'Sheet',kg:'Kg',kgs:'Kg',kilo:'Kg',kilos:'Kg',ton:'Ton',tons:'Ton',tonne:'Ton',tonnes:'Ton',mtr:'Mtr',mtrs:'Mtr',meter:'Mtr',meters:'Mtr',metre:'Mtr',metres:'Mtr',ft:'Ft',feet:'Ft',foot:'Ft'};
+/* "kgs" → Kg, "ft" → Ft; anything else the salesman types is kept (first letter capital) */
+function normUnit(u){u=String(u||'').trim().replace(/\.$/,'');if(!u)return'';return UNIT_WORDS[u.toLowerCase()]||(u[0].toUpperCase()+u.slice(1))}
+/* "100", "100 kg", "100kg", "2.5 ft" → {qty, unit} */
+function parseQty(t){const m=String(t||'').replace(/,/g,'').match(/^\s*(\d+(?:\.\d+)?|\.\d+)\s*([a-zA-Z][a-zA-Z.]*)?\s*$/);return m?{qty:parseFloat(m[1]),unit:m[2]?normUnit(m[2]):''}:{qty:NaN,unit:''}}
+/* party names: capitals, no commas */
+function partyName(s){return String(s||'').replace(/,/g,' ').replace(/\s+/g,' ').trim().toUpperCase()}
 const K='so3:';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -223,9 +235,17 @@ let lastPick=jget('last','');
 let picked=null,flushing=false,shown=8,curM=[],mineShown=15;
 
 /* ENGINE START — fuzzy matching, kept free of any page code so it can be tested on its own */
-let idx=null,pidx=null;
+let idx=null,pidx=null,SPELL=[];
+/* office spelling rules (from the master list): whole words only, e.g. chainlink → chain link, hw → hardware */
+function buildSpell(){
+  SPELL=((data.words&&data.words.spellings)||[]).map(r=>{
+    const f=(r.from||[]).map(x=>String(x).toLowerCase().trim()).filter(Boolean).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+    return f.length&&r.to?{re:new RegExp('(^|[^a-z0-9])('+f.join('|')+')(?=$|[^a-z0-9])','g'),to:String(r.to).toLowerCase()}:null;
+  }).filter(Boolean);
+}
 function norm(s){
   s=String(s||'').toLowerCase().replace(/[×*]/g,'x').replace(/["”″]/g,'inch').replace(/\s+/g,' ');
+  for(const r of SPELL)s=s.replace(r.re,(m,a)=>a+r.to);
   s=s.replace(/(\d)\s*(mm|ft|feet|foot|inch|in|g|gauge|kg|mtr|m)\b/g,(m,a,u)=>a+({feet:'ft',foot:'ft',in:'inch',gauge:'g'}[u]||u));
   for(let i=0;i<4;i++){s=s.replace(/(\d)\s*x\s*(?=\d)/g,'$1 ').replace(/(mm|ft|inch|g)\s*x\s*(?=\d)/g,'$1 ')}
   return s;
@@ -256,11 +276,12 @@ function scoreAgainst(qt,it){
   for(const q of qt){let best=0,bi=-1;it.forEach((t,i)=>{const s=tokScore(q,t);if(s>best){best=s;bi=i}});if(bi>=0)taken.add(bi);sum+=best}
   return (sum/qt.length)*(1-Math.min(0.2,(it.length-taken.size)*0.03));
 }
-/* item row: [id,name,variants,unit,by,at,src,dev]   party row: [id,name,place,by,at,src,dev] */
+/* item row: [id,name,variants,unit,by,at,src,dev]   party row: [id,name,place,by,at,src,dev,variants] */
 function buildIndex(){
+  buildSpell();
   idx=data.items.map(a=>{const raw=[a[1]].concat(a[2]||[]);return{id:a[0],name:a[1],variants:a[2]||[],unit:a[3]||'',by:a[4]||'',at:a[5]||0,src:a[6]||'',dev:a[7]||'',isNew:a[6]==='app',raw:raw,forms:raw.map(toks)}});
   idx.by=new Map(idx.map(i=>[i.name,i]));
-  pidx=data.parties.map(a=>({id:a[0],name:a[1],place:a[2]||'',by:a[3]||'',at:a[4]||0,src:a[5]||'',dev:a[6]||'',isNew:a[5]==='app',tk:toks(a[1]),tk2:toks(a[1]+' '+(a[2]||''))}));
+  pidx=data.parties.map(a=>({id:a[0],name:a[1],place:a[2]||'',by:a[3]||'',at:a[4]||0,src:a[5]||'',dev:a[6]||'',variants:a[7]||[],isNew:a[5]==='app',forms:[toks(a[1]),toks(a[1]+' '+(a[2]||''))].concat((a[7]||[]).map(toks))}));
 }
 /* Items that differ from `last` in only 1–2 size tokens (…x4 → …x5): the "just type 5" shortcut and the chips. */
 function siblings(last,qt){
@@ -299,7 +320,7 @@ function matchParties(text,max){
   if(!pidx)buildIndex();
   const qt=toks(text);if(!qt.length)return[];
   const res=[];
-  pidx.forEach(p=>{const s=Math.max(scoreAgainst(qt,p.tk),scoreAgainst(qt,p.tk2)*0.95);if(s>0.3)res.push({p,score:s})});
+  pidx.forEach(p=>{let s=0;p.forms.forEach((f,i)=>{const v=scoreAgainst(qt,f)*(i===1?0.95:1);if(v>s)s=v});if(s>0.3)res.push({p,score:s})});
   res.sort((a,b)=>b.score-a.score);
   return res.slice(0,max||6);
 }
@@ -335,7 +356,7 @@ async function pull(quiet){
     if(!quiet)setBadge('syncing…');
     const j=await call('pull',{known:data.version||''},45000);
     if(!j.same){
-      data={items:j.items,parties:j.parties,version:j.version};reapplyPending();jset('data',data);idx=null;pidx=null;
+      data={items:j.items,parties:j.parties,words:j.words||{},version:j.version};reapplyPending();jset('data',data);idx=null;pidx=null;
       renderItem();if(!$('adminView').classList.contains('hide'))paintAdm();
     }
     badgeIdle();
@@ -441,20 +462,20 @@ $('partyIn').oninput=()=>{
   if(!q){box.classList.add('hide');return}
   pm=matchParties(q);
   let h=pm.map((r,i)=>'<button type="button" data-i="'+i+'"><span><b>'+esc(r.p.name)+'</b>'+(r.p.place?' <span class="mut">'+esc(r.p.place)+'</span>':'')+'</span></button>').join('');
-  h+='<button type="button" class="new" data-new="1">+ Save “'+esc(q)+'” as a new party</button>';
+  h+='<button type="button" class="new" data-new="1">+ Save “'+esc(partyName(q))+'” as a new party</button>';
   box.innerHTML=h;box.classList.remove('hide');
 };
 $('partySug').onclick=e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.new){
-    const nm=$('partyIn').value.replace(/\s+/g,' ').trim();if(!nm)return;
+    const nm=partyName($('partyIn').value);if(!nm)return;
     order.party={name:nm,place:'',isNew:true};
     if(!data.parties.some(a=>key(a[1])===key(nm))){data.parties.push(['tmp-'+uid(),nm,'',cfg.user,Date.now(),'app',dev]);pidx=null}
     queue('addParty',{name:nm,place:''});
-  }else{const p=pm[+b.dataset.i].p;order.party={name:p.name,place:p.place,isNew:p.isNew}}
+  }else{const p=pm[+b.dataset.i].p;order.party={name:partyName(p.name),place:p.place,isNew:p.isNew}}
   afterParty();
 };
-$('partyIn').onkeydown=e=>{if(e.key==='Enter'&&pm.length&&$('partyIn').value.trim()){const p=pm[0].p;order.party={name:p.name,place:p.place,isNew:p.isNew};afterParty()}};
+$('partyIn').onkeydown=e=>{if(e.key==='Enter'&&pm.length&&$('partyIn').value.trim()){const p=pm[0].p;order.party={name:partyName(p.name),place:p.place,isNew:p.isNew};afterParty()}};
 
 /* ---------- my orders + repeat ---------- */
 function allMine(){
@@ -496,7 +517,7 @@ function repeatOrder(o,btn){
   if(order.lines.length&&!btn.dataset.sure){btn.dataset.sure=1;btn.textContent='Replace current items? Tap again';setTimeout(()=>{delete btn.dataset.sure;btn.textContent='Repeat this order'},3500);return}
   if(!pidx)buildIndex();
   const p=pidx.find(x=>key(x.name)===key(o.party));
-  order.party={name:p?p.name:o.party,place:p?p.place:(o.place||''),isNew:p?p.isNew:false};
+  order.party={name:partyName(p?p.name:o.party),place:p?p.place:(o.place||''),isNew:p?p.isNew:false};
   let gone=0;
   order.lines=o.lines.map(l=>{const it=resolveItem(l.item);if(!it)gone++;return it?{id:uid(),item:it.name,qty:l.qty,unit:l.unit,isNew:it.isNew}:{id:uid(),item:'',raw:l.item,qty:l.qty,unit:l.unit,flag:true}});
   order.note='';$('noteIn').value='';
@@ -513,7 +534,7 @@ function histClick(e){
 $('mine').onclick=histClick;$('partyHist').onclick=histClick;
 
 /* ---------- item entry ---------- */
-function unitSelect(cur){const u=UNITS.includes(cur)||!cur?UNITS:UNITS.concat([cur]);return u.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('')}
+function unitBox(cls,cur,attr){return '<input class="'+cls+'" list="unitList" value="'+esc(cur||'')+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Unit"'+(attr||'')+'>'}
 function renderQuick(){
   const qk=$('quick');if(!idx)buildIndex();
   let h='';
@@ -552,13 +573,13 @@ $('itemSug').onclick=e=>{
 function choose(it){
   picked=it;$('itemSug').classList.add('hide');$('quick').classList.add('hide');$('pick').classList.remove('hide');
   $('pickName').textContent=it.name+(it.isNew?' (new item)':'');
-  $('unitIn').innerHTML=unitSelect(it.unit);$('qtyIn').value='';$('qtyIn').focus();
+  $('unitIn').value=it.unit||'Nos';$('qtyIn').value='';$('qtyIn').focus();
 }
 $('cancelPick').onclick=()=>{picked=null;$('pick').classList.add('hide');$('itemIn').focus();$('itemIn').select();renderItem()};
 function addLine(){
   if(!picked)return;
-  const q=parseFloat($('qtyIn').value);if(!(q>0)){$('qtyIn').focus();return}
-  const unit=$('unitIn').value;
+  const pq=parseQty($('qtyIn').value),q=pq.qty;if(!(q>0)){$('qtyIn').focus();$('sendMsg').innerHTML='<span class="err">Type the quantity as a number, e.g. 10 or 100 kg.</span>';return}
+  const unit=pq.unit||normUnit($('unitIn').value)||'Nos';
   const ex=order.lines.find(l=>l.item===picked.name&&l.unit===unit&&!l.flag);
   if(ex){ex.qty=Math.round((ex.qty+q)*1000)/1000;$('sendMsg').textContent='Already in the order — quantity added to that line.'}
   else{order.lines.push({id:uid(),item:picked.name,qty:q,unit:unit,isNew:!!picked.isNew});$('sendMsg').textContent=''}
@@ -568,15 +589,16 @@ function addLine(){
 }
 $('addLine').onclick=addLine;
 $('qtyIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLine()}};
+$('qtyIn').oninput=()=>{const u=parseQty($('qtyIn').value).unit;if(u)$('unitIn').value=u};   // typing "100 kg" switches the unit to Kg
+$('unitIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLine()}};
 
 /* ---------- paste a full order ---------- */
-const UN='rolls?|nos?|pcs?|pieces?|bundles?|bdl|sheets?|kgs?|tons?|tonnes?|mtrs?|pkts?|packets?|bags?';
-const UMAP={roll:'Roll',rolls:'Roll',no:'Nos',nos:'Nos',pc:'Nos',pcs:'Nos',piece:'Nos',pieces:'Nos',bundle:'Bundle',bundles:'Bundle',bdl:'Bundle',sheet:'Sheet',sheets:'Sheet',kg:'Kg',kgs:'Kg',ton:'Ton',tons:'Ton',tonne:'Ton',tonnes:'Ton',mtr:'Mtr',mtrs:'Mtr',pkt:'Pkt',pkts:'Pkt',packet:'Pkt',packets:'Pkt',bag:'Pkt',bags:'Pkt'};
+const UN='rolls?|nos?|pcs?|pieces?|bundles?|bdl|sheets?|kgs?|kilos?|tons?|tonnes?|mtrs?|meters?|metres?|ft|feet|foot';
 function parseLine(raw){
   let s=raw.replace(/^[\s\-•*·]*(\d+[.)]\s+)?/,'').trim();if(!s)return null;
   const m=s.match(new RegExp('[\\s:=\\-–x×]+(\\d+(?:\\.\\d+)?)\\s*('+UN+')?\\s*$','i'));
   if(!m)return{text:s,qty:null,unit:null};
-  return{text:s.slice(0,m.index).trim(),qty:parseFloat(m[1]),unit:m[2]?UMAP[m[2].toLowerCase()]:null};
+  return{text:s.slice(0,m.index).trim(),qty:parseFloat(m[1]),unit:m[2]?normUnit(m[2]):null};
 }
 $('pasteGo').onclick=()=>{
   let n=0;
@@ -600,10 +622,14 @@ function paintCart(){
   if(!n){c.innerHTML='<div class="mut">No items yet.</div>';return}
   c.innerHTML=order.lines.map((l,i)=>{
     const head=l.flag?'<div class="tag">Pick the right item for: “'+esc(l.raw)+'”</div><div class="sug" id="fs'+i+'"></div>':'<div class="nm">'+(i+1)+'. '+esc(l.item)+(l.isNew?' <span class="tag">(new item)</span>':'')+'</div>'+(l.qtyGuess?'<div class="tag">No quantity found — check it</div>':'');
-    return '<div class="line'+(l.flag?' flag':'')+'">'+head+'<div class="row" style="margin-top:6px;flex-wrap:nowrap"><input class="qty" type="number" inputmode="decimal" value="'+l.qty+'" data-q="'+i+'"><select class="unit" data-u="'+i+'">'+unitSelect(l.unit)+'</select><button class="b sec" type="button" data-x="'+i+'" aria-label="Remove" style="margin-left:auto;padding:8px 14px">✕</button></div></div>';
+    return '<div class="line'+(l.flag?' flag':'')+'">'+head+'<div class="row" style="margin-top:6px;flex-wrap:nowrap"><input class="qty" type="text" autocomplete="off" value="'+fmtQty(l.qty)+'" data-q="'+i+'">'+unitBox('unit',l.unit,' data-u="'+i+'"')+'<button class="b sec" type="button" data-x="'+i+'" aria-label="Remove" style="margin-left:auto;padding:8px 14px">✕</button></div></div>';
   }).join('');
-  c.querySelectorAll('[data-q]').forEach(e=>e.oninput=()=>{const l=order.lines[+e.dataset.q];l.qty=parseFloat(e.value)||0;l.qtyGuess=false;saveOrder()});
-  c.querySelectorAll('[data-u]').forEach(e=>e.onchange=()=>{order.lines[+e.dataset.u].unit=e.value;saveOrder()});
+  c.querySelectorAll('[data-q]').forEach(e=>{
+    e.oninput=()=>{const l=order.lines[+e.dataset.q],p=parseQty(e.value);l.qty=p.qty>0?p.qty:0;l.qtyGuess=false;
+      if(p.unit){l.unit=p.unit;const u=c.querySelector('[data-u="'+e.dataset.q+'"]');if(u)u.value=p.unit}saveOrder()};
+    e.onchange=()=>{const l=order.lines[+e.dataset.q];if(l.qty>0)e.value=fmtQty(l.qty)};
+  });
+  c.querySelectorAll('[data-u]').forEach(e=>e.onchange=()=>{const u=normUnit(e.value)||'Nos';order.lines[+e.dataset.u].unit=u;e.value=u;saveOrder()});
   c.querySelectorAll('[data-x]').forEach(e=>e.onclick=()=>{order.lines.splice(+e.dataset.x,1);saveOrder();paintCart();paintPartyHist()});
   order.lines.forEach((l,i)=>{
     if(!l.flag)return;
@@ -625,8 +651,8 @@ function two(n){return String(n).padStart(2,'0')}
 function stamp(at){const d=new Date(at);return two(d.getDate())+'-'+two(d.getMonth()+1)+'-'+d.getFullYear()+' '+two(d.getHours())+':'+two(d.getMinutes())}
 function orderText(o,by,at){
   const party=typeof o.party==='string'?{name:o.party,place:o.place}:o.party;
-  let t='*ORDER* — '+party.name+(party.place?' ('+party.place+')':'')+'\n'+stamp(at||Date.now())+' · by '+by+'\n\n';
-  o.lines.forEach((l,i)=>{t+=(i+1)+'. '+l.item+' — '+fmtQty(l.qty)+' '+l.unit+'\n'});
+  let t=stamp(at||Date.now()).slice(0,10)+'\n'+partyName(party.name)+'\n\n';
+  o.lines.forEach((l,i)=>{t+=(i+1)+'. '+l.item+' - '+fmtQty(l.qty)+' '+l.unit+'\n'});
   if(o.note&&o.note.trim())t+='\nNote: '+o.note.trim();
   return t.trim();
 }
@@ -666,12 +692,12 @@ function metaLine(r){
 function edCard(kind,r){
   const item=kind==='item';
   return '<div class="line" data-k="'+kind+'" data-id="'+esc(r.id)+'"><div class="nm">'+esc(r.name)+(item?' <span class="su">'+esc(r.unit)+'</span>':(r.place?' <span class="mut">· '+esc(r.place)+'</span>':''))+'</div>'+
-    (item&&r.variants.length?'<div class="hl">= '+esc(r.variants.join(' · '))+'</div>':'')+
+    ((r.variants||[]).length?'<div class="hl">= '+esc(r.variants.join(' · '))+'</div>':'')+
     '<div class="mut">'+esc(metaLine(r))+'</div>'+
     '<div class="row" style="margin-top:6px"><button class="b sec sm" type="button" data-a="edit">Edit</button><button class="b sec sm" type="button" data-a="del">Delete</button></div>'+
     '<div class="edf hide"><label class="mut">Name</label><input class="en" value="'+esc(r.name)+'">'+
-    (item?'<label class="mut">Other spellings (one per line)</label><textarea class="ev" rows="3">'+esc(r.variants.join('\n'))+'</textarea><label class="mut">Unit</label><select class="eu">'+unitSelect(r.unit||'Nos')+'</select>'
-         :'<label class="mut">Place</label><input class="ep" value="'+esc(r.place)+'">')+
+    (item?'<label class="mut">Other spellings (one per line)</label><textarea class="ev" rows="3">'+esc(r.variants.join('\n'))+'</textarea><label class="mut">Unit</label>'+unitBox('eu',r.unit||'Nos')+''
+         :'<label class="mut">Place</label><input class="ep" value="'+esc(r.place)+'"><label class="mut">Other spellings (one per line)</label><textarea class="ev" rows="2">'+esc((r.variants||[]).join('\n'))+'</textarea>')+
     '<button class="b" type="button" data-a="save" style="width:100%;margin-top:8px">Save changes</button>'+
     (item?'<label class="mut">…or it is a duplicate — merge it into the correct item:</label><input class="em" placeholder="Search the correct item" autocomplete="off"><div class="sug emr hide"></div>':'')+
     '</div></div>';
@@ -705,7 +731,8 @@ function admClick(e){
   if(b.dataset.a==='edit'){card.querySelector('.edf').classList.toggle('hide');return}
   if(b.dataset.a==='save'){
     const p={id,name:card.querySelector('.en').value};
-    if(item){p.variants=card.querySelector('.ev').value.split(/\n|;/).map(s=>s.trim()).filter(Boolean);p.unit=card.querySelector('.eu').value}else p.place=card.querySelector('.ep').value;
+    p.variants=card.querySelector('.ev').value.split(/\n|;/).map(s=>s.trim()).filter(Boolean);
+    if(item)p.unit=normUnit(card.querySelector('.eu').value)||'Nos';else p.place=card.querySelector('.ep').value;
     return admDo(item?'adminEditItem':'adminEditParty',p,b,note(''));
   }
   if(b.dataset.a==='del'){
@@ -741,6 +768,37 @@ $('admImpGo').onclick=async()=>{
   impSure=false;$('admImpGo').textContent='Import';msg.textContent='Importing…';
   try{const j=await call('adminImport',Object.assign({kind,mode},parseImport(kind,txt)),90000);msg.textContent='Done — '+j.added+' added/changed.'+(mode==='replace'?' (The old list is saved in the versions folder.)':'');$('admImpTx').value='';data.version='';await pull(true);paintAdm()}
   catch(e){msg.innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+};
+/* whole-file import: {items,parties,words} (JW Orders import file) or Order to Sheet export {products,parties,words} */
+let fileData=null,fileSure=false;
+function readMasterFile(j){
+  const clean=a=>(a||[]).map(x=>String(x).trim()).filter(Boolean);
+  if(Array.isArray(j.items))return{items:j.items.map(x=>({name:x.name,variants:clean(x.variants),unit:x.unit||'Nos'})),parties:(j.parties||[]).map(x=>({name:x.name,place:x.place||'',variants:clean(x.variants)})),words:j.words||null};
+  if(Array.isArray(j.products))return{items:j.products.map(x=>({name:x.name,variants:clean(x.aliases),unit:x.soldByKg?'Kg':'Nos'})),parties:(j.parties||[]).map(x=>({name:x.name,place:'',variants:clean(x.aliases)})),
+    words:j.words?{spellings:(j.words.spellings||[]).concat(j.words.partyShort||[])}:null};
+  throw new Error('This file is not a master list.');
+}
+$('admFile').onchange=async()=>{
+  const f=$('admFile').files[0];fileData=null;$('admFileGo').classList.add('hide');if(!f)return;
+  try{
+    fileData=readMasterFile(JSON.parse(await f.text()));
+    $('admFileInfo').textContent=f.name+': '+fileData.items.length+' items, '+fileData.parties.length+' parties'+(fileData.words?', '+(fileData.words.spellings||[]).length+' spelling rules':'')+'. Mode: '+$('admImpMode').selectedOptions[0].text+'.';
+    $('admFileGo').classList.remove('hide');
+  }catch(e){$('admFileInfo').innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+};
+$('admFileGo').onclick=async()=>{
+  if(!fileData)return;
+  const mode=$('admImpMode').value,btn=$('admFileGo'),info=$('admFileInfo');
+  if(mode==='replace'&&!fileSure){fileSure=true;btn.textContent='Replace ALL items and parties? Tap again';setTimeout(()=>{fileSure=false;btn.textContent='Import file'},4000);return}
+  fileSure=false;btn.textContent='Import file';btn.disabled=true;
+  try{
+    info.textContent='Importing items…';const a=await call('adminImport',{kind:'items',mode,items:fileData.items},120000);
+    info.textContent='Importing parties…';const b=await call('adminImport',{kind:'parties',mode,parties:fileData.parties},120000);
+    if(fileData.words){info.textContent='Saving spelling rules…';await call('adminImport',{kind:'words',words:fileData.words},60000)}
+    info.textContent='Done — items: '+a.added+' added/changed, parties: '+b.added+' added/changed.'+(mode==='replace'?' (The old list is saved in the versions folder.)':'');
+    fileData=null;$('admFile').value='';btn.classList.add('hide');data.version='';await pull(true);paintAdm();
+  }catch(e){info.innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+  btn.disabled=false;
 };
 function download(name,text){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
