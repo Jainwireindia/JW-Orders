@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>JW Orders</title>
-<meta name="theme-color" content="#c4161c">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0dcb4">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#2b2219">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="JW Orders">
@@ -13,13 +14,13 @@
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--bd:#d9dde3;--pri:#c4161c;--prih:#a31217;--prit:#fff;--warn:#b45309;--warnbg:#fef3c7;--err:#b91c1c;--sel:#fdecec;--ok:#15803d}
-:root[data-theme="dark"]{--bg:#121417;--card:#1c1f24;--tx:#e8eaed;--mut:#9aa3af;--bd:#2f343c;--pri:#f0585e;--prih:#e0444a;--prit:#1a0506;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a1719;--ok:#4ade80}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1c1f24;--tx:#e8eaed;--mut:#9aa3af;--bd:#2f343c;--pri:#f0585e;--prih:#e0444a;--prit:#1a0506;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a1719;--ok:#4ade80}}
+:root{--bg:#fbf7ef;--card:#fff;--tx:#2b2118;--mut:#7a6a58;--bd:#e6dccb;--pri:#8a5a2b;--prih:#71481f;--prit:#fff;--warn:#b45309;--warnbg:#fef3c7;--err:#b91c1c;--sel:#f6ead2;--ok:#15803d;--hdr:#f0dcb4;--hdrt:#3b2a1a}
+:root[data-theme="dark"]{--bg:#15120e;--card:#1f1a14;--tx:#eee6da;--mut:#a89a88;--bd:#3a3127;--pri:#e2b86f;--prih:#d4a85c;--prit:#21180d;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a2e1c;--ok:#4ade80;--hdr:#2b2219;--hdrt:#f0dcb4}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15120e;--card:#1f1a14;--tx:#eee6da;--mut:#a89a88;--bd:#3a3127;--pri:#e2b86f;--prih:#d4a85c;--prit:#21180d;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a2e1c;--ok:#4ade80;--hdr:#2b2219;--hdrt:#f0dcb4}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;font-variant-ligatures:none;font-feature-settings:'calt' 0,'liga' 0}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior-y:contain;touch-action:manipulation}
-header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));background:#c4161c;color:#fff}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));background:var(--hdr);color:var(--hdrt);border-bottom:1px solid var(--bd)}
 header img{width:30px;height:30px;border-radius:6px;flex:none}
 header h1{font-size:16px;margin:0;flex:1;min-width:0;line-height:1.15}
 header h1 small{display:block;font-weight:400;opacity:.85;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -198,7 +199,7 @@ label.mut{display:block;margin-top:8px}
 
 <script>
 'use strict';
-const APP_VERSION='1.2.2';
+const APP_VERSION='1.2.3';
 const DEFAULT_SERVER_URL='https://script.google.com/macros/s/AKfycbwA-FsJ4gmehfsEs1Z3-8ZwN7x9PTbJGoVp_T8HvcLkMKI3CtDPIUiZNst2iX4JFdgL/exec';          // ← paste the Apps Script web app link here; then salesmen only type their password
 const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Pkt'];
 const K='so3:';
