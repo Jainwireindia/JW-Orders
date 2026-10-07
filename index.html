@@ -68,7 +68,7 @@ button.b:disabled{opacity:.5}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));display:flex;justify-content:center;z-index:6}
 .bar .b{width:100%;max-width:420px;min-height:50px;font-size:17px}
 details summary{cursor:pointer;font-weight:600;min-height:32px}
-html,body{overflow-x:hidden}
+body{overflow-x:clip}
 input.big{font-size:18px;font-weight:600;min-height:50px}
 #partyChip .chip{font-size:17px}
 #cart{margin-top:10px}
@@ -129,7 +129,6 @@ label.mut{display:block;margin-top:8px}
   <input id="partyIn" class="big" placeholder="Party name" autocomplete="off" enterkeyhint="search">
   <div id="partySug" class="sug hide"></div>
   <div id="partyChip"></div>
-  <div id="partyHist"></div>
   <div id="cart"></div>
   <div id="typeBox">
     <input id="itemIn" placeholder="+ Add item — type it any way (e.g. wm 4mm 4ft, or just 5)" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
@@ -141,6 +140,7 @@ label.mut{display:block;margin-top:8px}
     <textarea id="pasteTx" placeholder="wm 4mm 4ft 10&#10;gi wire 10g 5 bundle&#10;…"></textarea>
     <button class="b" id="pasteGo" type="button" style="margin-top:8px;width:100%">Add these lines</button>
   </div>
+  <div id="partyHist"></div>
   <input id="noteIn" placeholder="Note (optional)" style="margin-top:10px" autocomplete="off">
   <div class="row" style="margin-top:8px">
     <button class="b sec sm" id="btnCopy" type="button" style="flex:1">Copy text</button>
@@ -203,7 +203,7 @@ label.mut{display:block;margin-top:8px}
 
 <script>
 'use strict';
-const APP_VERSION='1.5';
+const APP_VERSION='1.5.1';
 const DEFAULT_SERVER_URL='https://script.google.com/macros/s/AKfycbwA-FsJ4gmehfsEs1Z3-8ZwN7x9PTbJGoVp_T8HvcLkMKI3CtDPIUiZNst2iX4JFdgL/exec';          // ← paste the Apps Script web app link here; then salesmen only type their password
 const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Ft'];
 const UNIT_WORDS={no:'Nos',nos:'Nos',pc:'Nos',pcs:'Nos',piece:'Nos',pieces:'Nos',roll:'Roll',rolls:'Roll',bundle:'Bundle',bundles:'Bundle',bdl:'Bundle',sheet:'Sheet',sheets:'Sheet',kg:'Kg',kgs:'Kg',kilo:'Kg',kilos:'Kg',ton:'Ton',tons:'Ton',tonne:'Ton',tonnes:'Ton',mtr:'Mtr',mtrs:'Mtr',meter:'Mtr',meters:'Mtr',metre:'Mtr',metres:'Mtr',ft:'Ft',feet:'Ft',foot:'Ft'};
