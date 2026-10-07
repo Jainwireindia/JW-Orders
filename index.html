@@ -16,6 +16,8 @@
 <style>
 :root{--bg:#fbf7ef;--card:#fff;--tx:#2b2118;--mut:#7a6a58;--bd:#e6dccb;--pri:#8a5a2b;--prih:#71481f;--prit:#fff;--warn:#b45309;--warnbg:#fef3c7;--err:#b91c1c;--sel:#f6ead2;--ok:#15803d;--hdr:#f0dcb4;--hdrt:#3b2a1a}
 :root[data-theme="dark"]{--bg:#15120e;--card:#1f1a14;--tx:#eee6da;--mut:#a89a88;--bd:#3a3127;--pri:#e2b86f;--prih:#d4a85c;--prit:#21180d;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a2e1c;--ok:#4ade80;--hdr:#2b2219;--hdrt:#f0dcb4}
+@media(min-width:560px){.ln{grid-template-columns:24px minmax(0,1fr) 90px 90px 40px;gap:8px}}
+.fab.away{display:none}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15120e;--card:#1f1a14;--tx:#eee6da;--mut:#a89a88;--bd:#3a3127;--pri:#e2b86f;--prih:#d4a85c;--prit:#21180d;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a2e1c;--ok:#4ade80;--hdr:#2b2219;--hdrt:#f0dcb4}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;font-variant-ligatures:none;font-feature-settings:'calt' 0,'liga' 0}
@@ -66,6 +68,22 @@ button.b:disabled{opacity:.5}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));display:flex;justify-content:center;z-index:6}
 .bar .b{width:100%;max-width:420px;min-height:50px;font-size:17px}
 details summary{cursor:pointer;font-weight:600;min-height:32px}
+html,body{overflow-x:hidden}
+input.big{font-size:18px;font-weight:600;min-height:50px}
+#partyChip .chip{font-size:17px}
+#cart{margin-top:10px}
+.ln{display:grid;grid-template-columns:18px minmax(0,1fr) 50px 54px 30px;gap:5px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)}
+.ln:first-child{border-top:1px solid var(--bd)}
+.ln.flag{background:var(--warnbg);border-radius:8px;padding:6px}
+.ln.miss .qty{outline:2px solid var(--err)}
+.lno{color:var(--mut);font-weight:600;text-align:right}
+.lnm{font-weight:600;overflow-wrap:anywhere;font-size:15px;line-height:1.25}
+.ln input{min-height:40px;padding:6px 6px;font-size:16px}
+input[list]::-webkit-calendar-picker-indicator{display:none!important}
+.lx{font:inherit;min-height:40px;padding:0;border:1px solid var(--bd);background:transparent;color:var(--mut);border-radius:8px}
+.lsug{grid-column:1/-1}
+#typeBox{margin-top:10px}
+.fab{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(84px + env(safe-area-inset-bottom));z-index:7;font:inherit;font-weight:600;font-size:15px;padding:10px 16px;border-radius:999px;border:1px solid var(--pri);background:var(--card);color:var(--pri);box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .hide{display:none!important}
 label.mut{display:block;margin-top:8px}
 .kv{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
@@ -80,6 +98,7 @@ label.mut{display:block;margin-top:8px}
   <span id="badge"></span>
   <button id="btnInstall" type="button" class="hide">Install</button>
   <button id="btnAdmin" type="button" class="hide">Admin</button>
+  <button id="btnTheme" type="button" aria-label="Light / dark mode" title="Light / dark mode">◐</button>
   <button id="btnSetup" type="button" aria-label="Settings">⚙</button>
 </header>
 <main>
@@ -101,52 +120,31 @@ label.mut{display:block;margin-top:8px}
     <button class="b sec" id="btnLogout" type="button" style="width:100%;margin-top:10px">Log out</button>
   </div>
   <div id="cfgMsg" class="mut" style="margin-top:8px"></div>
-  <div class="row" style="margin-top:10px"><button class="b sec sm" id="cfgTheme" type="button">Theme: Auto</button></div>
   <div id="iosHint" class="mut hide" style="margin-top:8px">To install on iPhone: tap the Share button in Safari, then “Add to Home Screen”.</div>
   <div class="mut" style="margin-top:8px" id="aboutLine"></div>
 </section>
 
 <div id="orderView">
-<section class="card">
-  <h2>1 · Party</h2>
-  <input id="partyIn" placeholder="Type party name" autocomplete="off" enterkeyhint="search">
+<section class="card" id="cartCard">
+  <input id="partyIn" class="big" placeholder="Party name" autocomplete="off" enterkeyhint="search">
   <div id="partySug" class="sug hide"></div>
   <div id="partyChip"></div>
   <div id="partyHist"></div>
-</section>
-
-<section class="card">
-  <h2>2 · Add item — type it any way</h2>
-  <input id="itemIn" placeholder="e.g. wm 4mm 4ft  ·  1x1 gi 10g  ·  just “5”" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
-  <div id="quick"></div>
-  <div id="itemSug" class="sug hide"></div>
-  <div id="pick" class="hide">
-    <div class="chip" id="pickName"></div>
-    <div class="row">
-      <input id="qtyIn" type="text" placeholder="Qty (e.g. 10 or 100 kg)" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" style="width:150px">
-      <input id="unitIn" list="unitList" placeholder="Unit" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:96px">
-      <button class="b" id="addLine" type="button" style="flex:1">Add</button>
-    </div>
-    <button class="b sec" id="cancelPick" type="button" style="margin-top:8px;width:100%">Pick a different item</button>
+  <div id="cart"></div>
+  <div id="typeBox">
+    <input id="itemIn" placeholder="+ Add item — type it any way (e.g. wm 4mm 4ft, or just 5)" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+    <div id="quick"></div>
+    <div id="itemSug" class="sug hide"></div>
   </div>
-</section>
-
-<section class="card">
-  <details id="pasteBox">
-    <summary>Or paste a full order</summary>
-    <p class="mut">One item per line, quantity at the end. Unclear lines are marked so you can pick the right item.</p>
+  <div id="pasteBox" class="hide">
+    <div class="mut">Paste the order — one item per line, quantity at the end. Unclear lines turn orange so you can pick the right item.</div>
     <textarea id="pasteTx" placeholder="wm 4mm 4ft 10&#10;gi wire 10g 5 bundle&#10;…"></textarea>
-    <button class="b" id="pasteGo" type="button" style="margin-top:8px;width:100%">Read lines</button>
-  </details>
-</section>
-
-<section class="card" id="cartCard">
-  <h2>Order <span id="cnt" class="mut"></span></h2>
-  <div id="cart"><div class="mut">No items yet.</div></div>
-  <input id="noteIn" placeholder="Note (delivery, rate, urgency…)" style="margin-top:8px" autocomplete="off">
+    <button class="b" id="pasteGo" type="button" style="margin-top:8px;width:100%">Add these lines</button>
+  </div>
+  <input id="noteIn" placeholder="Note (optional)" style="margin-top:10px" autocomplete="off">
   <div class="row" style="margin-top:8px">
-    <button class="b sec" id="btnCopy" type="button" style="flex:1">Copy text</button>
-    <button class="b sec" id="btnClear" type="button" style="flex:1">Clear order</button>
+    <button class="b sec sm" id="btnCopy" type="button" style="flex:1">Copy text</button>
+    <button class="b sec sm" id="btnClear" type="button" style="flex:1">Clear order</button>
   </div>
   <div id="sendMsg" class="mut" style="margin-top:8px"></div>
 </section>
@@ -200,11 +198,12 @@ label.mut{display:block;margin-top:8px}
 
 </main>
 <datalist id="unitList"><option>Nos</option><option>Roll</option><option>Bundle</option><option>Sheet</option><option>Kg</option><option>Ton</option><option>Mtr</option><option>Ft</option></datalist>
-<div class="bar"><button class="b" id="btnSend" type="button">Send to WhatsApp &amp; save</button></div>
+<button id="modeFab" type="button" class="fab">📋 Paste order</button>
+<div class="bar"><button class="b" id="btnSend" type="button">Save &amp; send to WhatsApp</button></div>
 
 <script>
 'use strict';
-const APP_VERSION='1.4';
+const APP_VERSION='1.5';
 const DEFAULT_SERVER_URL='https://script.google.com/macros/s/AKfycbwA-FsJ4gmehfsEs1Z3-8ZwN7x9PTbJGoVp_T8HvcLkMKI3CtDPIUiZNst2iX4JFdgL/exec';          // ← paste the Apps Script web app link here; then salesmen only type their password
 const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Ft'];
 const UNIT_WORDS={no:'Nos',nos:'Nos',pc:'Nos',pcs:'Nos',piece:'Nos',pieces:'Nos',roll:'Roll',rolls:'Roll',bundle:'Bundle',bundles:'Bundle',bdl:'Bundle',sheet:'Sheet',sheets:'Sheet',kg:'Kg',kgs:'Kg',kilo:'Kg',kilos:'Kg',ton:'Ton',tons:'Ton',tonne:'Ton',tonnes:'Ton',mtr:'Mtr',mtrs:'Mtr',meter:'Mtr',meters:'Mtr',metre:'Mtr',metres:'Mtr',ft:'Ft',feet:'Ft',foot:'Ft'};
@@ -232,7 +231,7 @@ let pending=jget('pending',[]);          // {action,payload,pass,user} waiting f
 let mine=jget('mine',[]);                // this salesman's orders from the server
 let recent=jget('recent',[]);
 let lastPick=jget('last','');
-let picked=null,flushing=false,shown=8,curM=[],mineShown=15;
+let flushing=false,shown=8,curM=[],mineShown=15;
 
 /* ENGINE START — fuzzy matching, kept free of any page code so it can be tested on its own */
 let idx=null,pidx=null,SPELL=[];
@@ -432,8 +431,9 @@ $('btnLogout').onclick=()=>{
   showView('order');paintWho();paintMine();paintPartyHist();
 };
 function theme(){try{return localStorage.getItem(K+'theme')||'auto'}catch(e){return'auto'}}
-function applyTheme(){const t=theme();if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);$('cfgTheme').textContent='Theme: '+t[0].toUpperCase()+t.slice(1)}
-$('cfgTheme').onclick=()=>{const n={auto:'light',light:'dark',dark:'auto'}[theme()];try{localStorage.setItem(K+'theme',n)}catch(e){}applyTheme()};
+function applyTheme(){const t=theme();if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
+  $('btnTheme').textContent={auto:'◐ Auto',light:'☀ Light',dark:'☾ Dark'}[t];$('btnTheme').title='Theme: '+t+' (tap to change)'}
+$('btnTheme').onclick=()=>{const n={auto:'light',light:'dark',dark:'auto'}[theme()];try{localStorage.setItem(K+'theme',n)}catch(e){}applyTheme()};
 let dip=null;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('btnInstall').classList.remove('hide')});
 $('btnInstall').onclick=async()=>{if(!dip)return;dip.prompt();try{await dip.userChoice}catch(e){}dip=null;$('btnInstall').classList.add('hide')};
@@ -442,7 +442,7 @@ const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').ma
 if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)$('iosHint').classList.remove('hide');
 function showView(v){
   $('orderView').classList.toggle('hide',v!=='order');$('adminView').classList.toggle('hide',v!=='admin');
-  $('btnAdmin').textContent=v==='admin'?'Orders':'Admin';$('btnSend').parentNode.classList.toggle('hide',v==='admin');
+  $('btnAdmin').textContent=v==='admin'?'Orders':'Admin';$('btnSend').parentNode.classList.toggle('hide',v==='admin');$('modeFab').classList.toggle('hide',v==='admin');
   if(v==='admin'){paintAdm();pull(true)}
   window.scrollTo(0,0);
 }
@@ -547,17 +547,16 @@ function renderQuick(){
 }
 function renderItem(){
   const q=$('itemIn').value.trim(),sug=$('itemSug'),qk=$('quick');
-  if(picked){sug.classList.add('hide');qk.classList.add('hide');return}
-  if(!q){sug.classList.add('hide');renderQuick();return}
+  if(!q){sug.classList.add('hide');$('modeFab').classList.remove('away');renderQuick();return}
   qk.classList.add('hide');
   curM=matchItems(q,40,lastPick);
   let h=curM.slice(0,shown).map((r,i)=>'<button type="button" class="sg" data-i="'+i+'"><span class="sn">'+esc(r.item.name)+(r.sib?'<span class="tg sb">like last</span>':'')+(r.item.isNew?'<span class="tg">new</span>':'')+'</span><span class="su">'+esc(r.item.unit)+'</span>'+(r.via?'<span class="sv">= '+esc(r.via)+'</span>':'')+'</button>').join('');
   if(curM.length>shown)h+='<button type="button" class="more" data-more="1">Show '+(curM.length-shown)+' more</button>';
   h+='<button type="button" class="new" data-new="1">+ Not in list — save “'+esc(q)+'” as a new item</button>';
-  sug.innerHTML=h;sug.classList.remove('hide');
+  sug.innerHTML=h;sug.classList.remove('hide');$('modeFab').classList.add('away');
 }
-$('itemIn').oninput=()=>{picked=null;shown=8;$('pick').classList.add('hide');renderItem()};
-$('itemIn').onfocus=()=>{if(!picked)renderItem()};
+$('itemIn').oninput=()=>{shown=8;renderItem()};
+$('itemIn').onfocus=()=>renderItem();
 $('itemIn').onkeydown=e=>{if(e.key==='Enter'){const f=$('itemSug').querySelector('.sg');if(f){e.preventDefault();f.click()}}};
 $('quick').onclick=e=>{const b=e.target.closest('button');if(!b||!idx.by.has(b.dataset.n))return;const it=idx.by.get(b.dataset.n);choose({name:it.name,unit:it.unit||'Nos',isNew:it.isNew})};
 $('itemSug').onclick=e=>{
@@ -570,27 +569,17 @@ $('itemSug').onclick=e=>{
   }
   const r=curM[+b.dataset.i];if(r)choose({name:r.item.name,unit:r.item.unit||'Nos',isNew:r.item.isNew});
 };
+/* picking an item adds it as the next numbered line and puts the cursor in its Qty box */
 function choose(it){
-  picked=it;$('itemSug').classList.add('hide');$('quick').classList.add('hide');$('pick').classList.remove('hide');
-  $('pickName').textContent=it.name+(it.isNew?' (new item)':'');
-  $('unitIn').value=it.unit||'Nos';$('qtyIn').value='';$('qtyIn').focus();
+  let i=order.lines.findIndex(l=>!l.flag&&l.item===it.name);
+  if(i<0){order.lines.push({id:uid(),item:it.name,qty:0,unit:it.unit||'Nos',isNew:!!it.isNew});i=order.lines.length-1;$('sendMsg').textContent=''}
+  else $('sendMsg').textContent='Already in the list (line '+(i+1)+') — change its quantity.';
+  lastPick=it.name;jset('last',lastPick);
+  recent=[it.name].concat(recent.filter(n=>n!==it.name)).slice(0,20);jset('recent',recent);
+  $('itemIn').value='';shown=8;$('itemSug').classList.add('hide');$('modeFab').classList.remove('away');
+  saveOrder();paintCart();paintPartyHist();renderQuick();
+  const q=document.querySelector('#cart [data-q="'+i+'"]');if(q){q.focus();q.select()}
 }
-$('cancelPick').onclick=()=>{picked=null;$('pick').classList.add('hide');$('itemIn').focus();$('itemIn').select();renderItem()};
-function addLine(){
-  if(!picked)return;
-  const pq=parseQty($('qtyIn').value),q=pq.qty;if(!(q>0)){$('qtyIn').focus();$('sendMsg').innerHTML='<span class="err">Type the quantity as a number, e.g. 10 or 100 kg.</span>';return}
-  const unit=pq.unit||normUnit($('unitIn').value)||'Nos';
-  const ex=order.lines.find(l=>l.item===picked.name&&l.unit===unit&&!l.flag);
-  if(ex){ex.qty=Math.round((ex.qty+q)*1000)/1000;$('sendMsg').textContent='Already in the order — quantity added to that line.'}
-  else{order.lines.push({id:uid(),item:picked.name,qty:q,unit:unit,isNew:!!picked.isNew});$('sendMsg').textContent=''}
-  lastPick=picked.name;jset('last',lastPick);
-  recent=[picked.name].concat(recent.filter(n=>n!==picked.name)).slice(0,20);jset('recent',recent);
-  saveOrder();picked=null;$('pick').classList.add('hide');$('itemIn').value='';paintCart();paintPartyHist();renderItem();$('itemIn').focus();
-}
-$('addLine').onclick=addLine;
-$('qtyIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLine()}};
-$('qtyIn').oninput=()=>{const u=parseQty($('qtyIn').value).unit;if(u)$('unitIn').value=u};   // typing "100 kg" switches the unit to Kg
-$('unitIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLine()}};
 
 /* ---------- paste a full order ---------- */
 const UN='rolls?|nos?|pcs?|pieces?|bundles?|bdl|sheets?|kgs?|kilos?|tons?|tonnes?|mtrs?|meters?|metres?|ft|feet|foot';
@@ -609,7 +598,7 @@ $('pasteGo').onclick=()=>{
     order.lines.push({id:uid(),item:sure?top.item.name:'',raw:p.text,qty:p.qty||1,unit:p.unit||(sure&&top.item.unit)||'Nos',flag:!sure,qtyGuess:p.qty==null,isNew:!!(sure&&top.item.isNew)});
     n++;
   });
-  $('pasteTx').value='';$('pasteBox').open=false;saveOrder();paintCart();paintPartyHist();
+  $('pasteTx').value='';saveOrder();setMode('type');paintCart();paintPartyHist();
   $('sendMsg').textContent=n?n+' line(s) read.':'';
 };
 
@@ -617,19 +606,23 @@ $('pasteGo').onclick=()=>{
 function saveOrder(){jset('order',order)}
 function paintCart(){
   const c=$('cart'),n=order.lines.length;
-  $('cnt').textContent=n?'('+n+')':'';
-  $('btnSend').innerHTML=n?'Send '+n+' item'+(n>1?'s':'')+' to WhatsApp &amp; save':'Send to WhatsApp &amp; save';
-  if(!n){c.innerHTML='<div class="mut">No items yet.</div>';return}
-  c.innerHTML=order.lines.map((l,i)=>{
-    const head=l.flag?'<div class="tag">Pick the right item for: “'+esc(l.raw)+'”</div><div class="sug" id="fs'+i+'"></div>':'<div class="nm">'+(i+1)+'. '+esc(l.item)+(l.isNew?' <span class="tag">(new item)</span>':'')+'</div>'+(l.qtyGuess?'<div class="tag">No quantity found — check it</div>':'');
-    return '<div class="line'+(l.flag?' flag':'')+'">'+head+'<div class="row" style="margin-top:6px;flex-wrap:nowrap"><input class="qty" type="text" autocomplete="off" value="'+fmtQty(l.qty)+'" data-q="'+i+'">'+unitBox('unit',l.unit,' data-u="'+i+'"')+'<button class="b sec" type="button" data-x="'+i+'" aria-label="Remove" style="margin-left:auto;padding:8px 14px">✕</button></div></div>';
-  }).join('');
+  $('btnSend').innerHTML=n?'Save &amp; send '+n+' item'+(n>1?'s':'')+' to WhatsApp':'Save &amp; send to WhatsApp';
+  c.innerHTML=order.lines.map((l,i)=>'<div class="ln'+(l.flag?' flag':'')+'" data-i="'+i+'"><span class="lno">'+(i+1)+'.</span>'+
+    '<span class="lnm">'+(l.flag?'<span class="tag">Which item is “'+esc(l.raw)+'”?</span>':esc(l.item)+(l.isNew?' <span class="tag">new</span>':''))+(l.qtyGuess?' <span class="tag">check qty</span>':'')+'</span>'+
+    '<input class="qty" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" placeholder="Qty" value="'+(l.qty>0?fmtQty(l.qty):'')+'" data-q="'+i+'">'+
+    unitBox('unit',l.unit,' data-u="'+i+'" enterkeyhint="next"')+
+    '<button class="lx" type="button" data-x="'+i+'" aria-label="Remove line">✕</button>'+
+    (l.flag?'<div class="sug lsug" id="fs'+i+'"></div>':'')+'</div>').join('');
   c.querySelectorAll('[data-q]').forEach(e=>{
-    e.oninput=()=>{const l=order.lines[+e.dataset.q],p=parseQty(e.value);l.qty=p.qty>0?p.qty:0;l.qtyGuess=false;
-      if(p.unit){l.unit=p.unit;const u=c.querySelector('[data-u="'+e.dataset.q+'"]');if(u)u.value=p.unit}saveOrder()};
+    e.oninput=()=>{const l=order.lines[+e.dataset.q],p=parseQty(e.value);l.qty=p.qty>0?p.qty:0;l.qtyGuess=false;e.closest('.ln').classList.remove('miss');
+      if(p.unit){l.unit=p.unit;const u=c.querySelector('[data-u="'+e.dataset.q+'"]');if(u)u.value=p.unit}saveOrder()};   // "100 kg" → unit Kg
     e.onchange=()=>{const l=order.lines[+e.dataset.q];if(l.qty>0)e.value=fmtQty(l.qty)};
+    e.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();if(order.lines[+e.dataset.q].qty>0)$('itemIn').focus()}};
   });
-  c.querySelectorAll('[data-u]').forEach(e=>e.onchange=()=>{const u=normUnit(e.value)||'Nos';order.lines[+e.dataset.u].unit=u;e.value=u;saveOrder()});
+  c.querySelectorAll('[data-u]').forEach(e=>{
+    e.onchange=()=>{const u=normUnit(e.value)||'Nos';order.lines[+e.dataset.u].unit=u;e.value=u;saveOrder()};
+    e.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();e.onchange();$('itemIn').focus()}};
+  });
   c.querySelectorAll('[data-x]').forEach(e=>e.onclick=()=>{order.lines.splice(+e.dataset.x,1);saveOrder();paintCart();paintPartyHist()});
   order.lines.forEach((l,i)=>{
     if(!l.flag)return;
@@ -637,11 +630,19 @@ function paintCart(){
     box.innerHTML=m.map((r,k)=>'<button type="button" class="sg" data-k="'+k+'"><span class="sn">'+esc(r.item.name)+'</span><span class="su">'+esc(r.item.unit)+'</span>'+(r.via?'<span class="sv">= '+esc(r.via)+'</span>':'')+'</button>').join('')+'<button type="button" class="new" data-nw="1">+ Save “'+esc(l.raw)+'” as a new item</button>';
     box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
       if(b.dataset.nw){l.item=l.raw.replace(/\s+/g,' ').trim();l.isNew=true;if(!data.items.some(a=>key(a[1])===key(l.item))){data.items.push(['tmp-'+uid(),l.item,[],l.unit||'Nos',cfg.user,Date.now(),'app',dev]);idx=null}queue('addItem',{name:l.item,unit:l.unit||'Nos'})}
-      else{const it=m[+b.dataset.k].item;l.item=it.name;l.isNew=it.isNew;if(it.unit)l.unit=it.unit}
+      else{const it=m[+b.dataset.k].item;l.item=it.name;l.isNew=it.isNew;if(it.unit&&!l.unitTyped)l.unit=it.unit}
       l.flag=false;lastPick=l.item;jset('last',lastPick);saveOrder();paintCart();
     });
   });
 }
+/* floating switch: type items one by one, or paste a whole order */
+let mode=jget('mode','type');
+function setMode(m){
+  mode=m==='paste'?'paste':'type';jset('mode',mode);
+  $('typeBox').classList.toggle('hide',mode==='paste');$('pasteBox').classList.toggle('hide',mode!=='paste');
+  $('modeFab').textContent=mode==='paste'?'⌨ Type items':'📋 Paste order';
+}
+$('modeFab').onclick=()=>{setMode(mode==='paste'?'type':'paste');(mode==='paste'?$('pasteTx'):$('itemIn')).focus()};
 $('noteIn').value=order.note||'';
 $('noteIn').oninput=()=>{order.note=$('noteIn').value;saveOrder()};
 
@@ -662,7 +663,8 @@ function check(){
   if(!order.party){$('partyIn').focus();return bad('Choose the party first.')}
   if(!order.lines.length)return bad('Add at least one item.');
   if(order.lines.some(l=>l.flag))return bad('Pick the right item on the orange lines first.');
-  if(order.lines.some(l=>!(l.qty>0)))return bad('A line has no quantity.');
+  const miss=order.lines.findIndex(l=>!(l.qty>0));
+  if(miss>=0){const r=document.querySelector('#cart .ln[data-i="'+miss+'"]');if(r){r.classList.add('miss');r.querySelector('.qty').focus()}return bad('Line '+(miss+1)+' has no quantity.')}
   return true;
 }
 function openWA(text){const u='https://wa.me/?text='+encodeURIComponent(text);if(!window.open(u,'_blank'))location.href=u}
@@ -828,7 +830,7 @@ $('admExport').onclick=async()=>{
 /* ---------- start ---------- */
 $('aboutLine').textContent='JW Orders v'+APP_VERSION+' · Jain Wire Netting Corporation';
 setRange(1);paintImpHelp();
-applyTheme();paintWho();paintParty();paintCart();paintMine();renderItem();
+applyTheme();setMode(mode);paintWho();paintParty();paintCart();paintMine();renderItem();
 if(!loggedIn())showSetup(true);
 pull();flush();fetchMine();
 setInterval(()=>{if(!document.hidden){pull(true);flush()}},45000);
