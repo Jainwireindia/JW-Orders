@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JW Orders</title>
+<meta name="theme-color" content="#c4161c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JW Orders">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--bd:#d9dde3;--pri:#c4161c;--prih:#a31217;--prit:#fff;--warn:#b45309;--warnbg:#fef3c7;--err:#b91c1c;--sel:#fdecec;--ok:#15803d}
+:root[data-theme="dark"]{--bg:#121417;--card:#1c1f24;--tx:#e8eaed;--mut:#9aa3af;--bd:#2f343c;--pri:#f0585e;--prih:#e0444a;--prit:#1a0506;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a1719;--ok:#4ade80}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121417;--card:#1c1f24;--tx:#e8eaed;--mut:#9aa3af;--bd:#2f343c;--pri:#f0585e;--prih:#e0444a;--prit:#1a0506;--warn:#fbbf24;--warnbg:#3a2f12;--err:#f87171;--sel:#3a1719;--ok:#4ade80}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;font-variant-ligatures:none;font-feature-settings:'calt' 0,'liga' 0}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior-y:contain;touch-action:manipulation}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));background:#c4161c;color:#fff}
+header img{width:30px;height:30px;border-radius:6px;flex:none}
+header h1{font-size:16px;margin:0;flex:1;min-width:0;line-height:1.15}
+header h1 small{display:block;font-weight:400;opacity:.85;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:6px 10px;font-size:14px;min-height:36px}
+#badge{font-size:12px;opacity:.95;white-space:nowrap;max-width:40vw;overflow:hidden;text-overflow:ellipsis}
+main{max-width:720px;margin:0 auto;padding:10px calc(12px + env(safe-area-inset-right)) 130px calc(12px + env(safe-area-inset-left))}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);margin:0 0 8px}
+input,select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;min-height:44px}
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);border-color:transparent}
+button.b{font:inherit;background:var(--pri);color:var(--prit);border:0;border-radius:8px;padding:10px 14px;font-weight:600;min-height:44px}
+button.b:active{background:var(--prih)}
+button.b.sec{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+button.b.sm{min-height:38px;padding:6px 12px;font-size:14px}
+button.b:disabled{opacity:.5}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>*{min-width:0}
+.sug{margin-top:6px;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--card)}
+.sg,.sug>button{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--tx);background:var(--card);border:0;border-bottom:1px solid var(--bd);padding:10px 12px;min-height:52px}
+.sug>button:last-child{border-bottom:0}
+.sg:first-child{background:var(--sel)}
+.sn{font-weight:600;word-break:break-word}
+.su{font-size:13px;color:var(--mut)}
+.sv{grid-column:1/-1;font-size:13px;color:var(--mut)}
+.tg{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:middle;background:var(--warnbg);color:var(--warn)}
+.tg.sb{background:var(--sel);color:var(--pri)}
+.sug>button.new,.sug>button.more{display:block;color:var(--pri);font-weight:600;min-height:48px}
+.ql{font-size:13px;color:var(--mut);margin:8px 0 4px;word-break:break-word}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.ch{font:inherit;font-size:14px;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:8px 12px;min-height:40px;word-break:break-all;text-align:left}
+.ch.sb{border-color:var(--pri);background:var(--sel)}
+.chip{display:inline-block;background:var(--sel);border:1px solid var(--pri);border-radius:999px;padding:6px 12px;margin:4px 0;font-weight:600;word-break:break-word}
+.line{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.line.flag{border-color:var(--warn);background:var(--warnbg)}
+.line .nm{font-weight:600;word-break:break-word}
+.tag{font-size:12px;color:var(--warn)}
+.okt{color:var(--ok)}
+.line .qty{width:92px}
+.line .unit{width:104px}
+.mut{color:var(--mut);font-size:13px}
+.err{color:var(--err);font-size:14px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:10px calc(12px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));display:flex;justify-content:center;z-index:6}
+.bar .b{width:100%;max-width:420px;min-height:50px;font-size:17px}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+.hide{display:none!important}
+label.mut{display:block;margin-top:8px}
+.kv{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.kv>*{flex:1;min-width:120px}
+.hl{font-size:13px;color:var(--mut);margin-top:2px;word-break:break-word}
+</style>
+</head>
+<body>
+<header>
+  <img src="favicon.png" alt="">
+  <h1>JW Orders<small id="sub"></small></h1>
+  <span id="badge"></span>
+  <button id="btnInstall" type="button" class="hide">Install</button>
+  <button id="btnAdmin" type="button" class="hide">Admin</button>
+  <button id="btnSetup" type="button" aria-label="Settings">⚙</button>
+</header>
+<main>
+
+<section class="card hide" id="setup">
+  <h2>Log in</h2>
+  <div id="urlWrap" class="hide">
+    <label class="mut" for="cfgUrl">Server link (one time)</label>
+    <input id="cfgUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+  <div id="loginBox">
+    <label class="mut" for="cfgPass">Your password</label>
+    <input id="cfgPass" type="password" autocomplete="current-password" enterkeyhint="go">
+    <button class="b" id="cfgSave" type="button" style="width:100%;margin-top:10px">Log in</button>
+  </div>
+  <div id="whoBox" class="hide">
+    <div id="whoLine" style="font-weight:600"></div>
+    <div class="mut" id="devLine"></div>
+    <button class="b sec" id="btnLogout" type="button" style="width:100%;margin-top:10px">Log out</button>
+  </div>
+  <div id="cfgMsg" class="mut" style="margin-top:8px"></div>
+  <div class="row" style="margin-top:10px"><button class="b sec sm" id="cfgTheme" type="button">Theme: Auto</button></div>
+  <div id="iosHint" class="mut hide" style="margin-top:8px">To install on iPhone: tap the Share button in Safari, then “Add to Home Screen”.</div>
+  <div class="mut" style="margin-top:8px" id="aboutLine"></div>
+</section>
+
+<div id="orderView">
+<section class="card">
+  <h2>1 · Party</h2>
+  <input id="partyIn" placeholder="Type party name" autocomplete="off" enterkeyhint="search">
+  <div id="partySug" class="sug hide"></div>
+  <div id="partyChip"></div>
+  <div id="partyHist"></div>
+</section>
+
+<section class="card">
+  <h2>2 · Add item — type it any way</h2>
+  <input id="itemIn" placeholder="e.g. wm 4mm 4ft  ·  1x1 gi 10g  ·  just “5”" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+  <div id="quick"></div>
+  <div id="itemSug" class="sug hide"></div>
+  <div id="pick" class="hide">
+    <div class="chip" id="pickName"></div>
+    <div class="row">
+      <input id="qtyIn" type="number" inputmode="decimal" placeholder="Qty" enterkeyhint="done" style="width:110px">
+      <select id="unitIn" style="width:120px"></select>
+      <button class="b" id="addLine" type="button" style="flex:1">Add</button>
+    </div>
+    <button class="b sec" id="cancelPick" type="button" style="margin-top:8px;width:100%">Pick a different item</button>
+  </div>
+</section>
+
+<section class="card">
+  <details id="pasteBox">
+    <summary>Or paste a full order</summary>
+    <p class="mut">One item per line, quantity at the end. Unclear lines are marked so you can pick the right item.</p>
+    <textarea id="pasteTx" placeholder="wm 4mm 4ft 10&#10;gi wire 10g 5 bundle&#10;…"></textarea>
+    <button class="b" id="pasteGo" type="button" style="margin-top:8px;width:100%">Read lines</button>
+  </details>
+</section>
+
+<section class="card" id="cartCard">
+  <h2>Order <span id="cnt" class="mut"></span></h2>
+  <div id="cart"><div class="mut">No items yet.</div></div>
+  <input id="noteIn" placeholder="Note (delivery, rate, urgency…)" style="margin-top:8px" autocomplete="off">
+  <div class="row" style="margin-top:8px">
+    <button class="b sec" id="btnCopy" type="button" style="flex:1">Copy text</button>
+    <button class="b sec" id="btnClear" type="button" style="flex:1">Clear order</button>
+  </div>
+  <div id="sendMsg" class="mut" style="margin-top:8px"></div>
+</section>
+
+<section class="card">
+  <h2>My orders</h2>
+  <input id="mineQ" placeholder="Filter by party" autocomplete="off">
+  <div id="mine" class="mut" style="margin-top:8px">Nothing yet.</div>
+</section>
+</div>
+
+<div id="adminView" class="hide">
+  <section class="card">
+    <h2>Added by salesmen <span id="admCnt" class="mut"></span></h2>
+    <div class="kv"><select id="admNewKind"><option value="item">Items</option><option value="party">Parties</option></select></div>
+    <div id="admNew" style="margin-top:8px"></div>
+  </section>
+  <section class="card">
+    <h2>Find &amp; edit any item or party</h2>
+    <div class="kv"><select id="admFindKind"><option value="item">Items</option><option value="party">Parties</option></select></div>
+    <input id="admFindQ" placeholder="Search…" autocomplete="off" style="margin-top:6px">
+    <div id="admFind" style="margin-top:8px"></div>
+  </section>
+  <section class="card">
+    <h2>Add to master list</h2>
+    <div class="kv">
+      <select id="admImpKind"><option value="items">Items</option><option value="parties">Parties</option></select>
+      <select id="admImpMode"><option value="merge">Add / merge</option><option value="replace">Replace all</option></select>
+    </div>
+    <p class="mut" id="admImpHelp"></p>
+    <textarea id="admImpTx"></textarea>
+    <button class="b" id="admImpGo" type="button" style="width:100%;margin-top:8px">Import</button>
+    <div id="admImpMsg" class="mut" style="margin-top:6px"></div>
+    <button class="b sec" id="admDlCsv" type="button" style="width:100%;margin-top:10px">Download item list (CSV)</button>
+  </section>
+  <section class="card">
+    <h2>Download all salesmen's orders</h2>
+    <div class="kv"><input type="date" id="admFrom"><input type="date" id="admTo"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="b sec" id="admToday" type="button" style="flex:1">Today</button>
+      <button class="b sec" id="admWeek" type="button" style="flex:1">Last 7 days</button>
+    </div>
+    <button class="b" id="admExport" type="button" style="width:100%;margin-top:8px">Download CSV</button>
+    <div id="admMsg" class="mut" style="margin-top:6px"></div>
+  </section>
+</div>
+
+</main>
+<div class="bar"><button class="b" id="btnSend" type="button">Send to WhatsApp &amp; save</button></div>
+
+<script>
+'use strict';
+const APP_VERSION='1.2.1';
+const DEFAULT_SERVER_URL='';          // ← paste the Apps Script web app link here; then salesmen only type their password
+const UNITS=['Nos','Roll','Bundle','Sheet','Kg','Ton','Mtr','Pkt'];
+const K='so3:';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const key=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+const jget=(k,d)=>{try{const v=localStorage.getItem(K+k);return v?JSON.parse(v):d}catch(e){return d}};
+const jset=(k,v)=>{try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}};
+
+/* ---------- state ---------- */
+let cfg=Object.assign({url:'',pass:'',user:'',admin:false},jget('cfg',{}));
+if(DEFAULT_SERVER_URL)cfg.url=DEFAULT_SERVER_URL;
+let dev=jget('dev','');if(!dev){dev=Math.random().toString(36).slice(2,8);jset('dev',dev)}
+let data=jget('data',{items:[],parties:[],version:''});
+let order=jget('order',{party:null,lines:[],note:''});
+let pending=jget('pending',[]);          // {action,payload,pass,user} waiting for the server
+let mine=jget('mine',[]);                // this salesman's orders from the server
+let recent=jget('recent',[]);
+let lastPick=jget('last','');
+let picked=null,flushing=false,shown=8,curM=[],mineShown=15;
+
+/* ENGINE START — fuzzy matching, kept free of any page code so it can be tested on its own */
+let idx=null,pidx=null;
+function norm(s){
+  s=String(s||'').toLowerCase().replace(/[×*]/g,'x').replace(/["”″]/g,'inch').replace(/\s+/g,' ');
+  s=s.replace(/(\d)\s*(mm|ft|feet|foot|inch|in|g|gauge|kg|mtr|m)\b/g,(m,a,u)=>a+({feet:'ft',foot:'ft',in:'inch',gauge:'g'}[u]||u));
+  for(let i=0;i<4;i++){s=s.replace(/(\d)\s*x\s*(?=\d)/g,'$1 ').replace(/(mm|ft|inch|g)\s*x\s*(?=\d)/g,'$1 ')}
+  return s;
+}
+function toks(s){return norm(s).split(/[^a-z0-9./]+/).filter(Boolean)}
+function lev(a,b){
+  if(a===b)return 0;if(Math.abs(a.length-b.length)>2)return 9;
+  const m=a.length,n=b.length,d=[];for(let i=0;i<=m;i++){d[i]=[i]}for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[m][n];
+}
+const isNum=t=>/^[\d./]+$/.test(t);
+const numPart=t=>{const m=t.match(/^([\d./]+)[a-z]*$/);return m?m[1]:null};
+function tokScore(q,t){
+  if(q===t)return 1;
+  if(isNum(q)){const p=numPart(t);return p&&p===q?0.9:0}
+  const qn=numPart(q);
+  if(qn&&!isNum(q)){const tn=numPart(t);return tn===qn&&t.replace(/[\d./]/g,'')===q.replace(/[\d./]/g,'')?1:0}
+  if(isNum(t))return 0;
+  if(q.length>=2&&t.startsWith(q))return 0.8;
+  if(t.length>=3&&q.startsWith(t))return 0.5;
+  if(q.length>=4&&t.length>=4){const d=lev(q,t);if(d<=1)return 0.75;if(d<=2&&q.length>=7)return 0.6}
+  return 0;
+}
+function scoreAgainst(qt,it){
+  if(!qt.length||!it.length)return 0;
+  let sum=0;const taken=new Set();
+  for(const q of qt){let best=0,bi=-1;it.forEach((t,i)=>{const s=tokScore(q,t);if(s>best){best=s;bi=i}});if(bi>=0)taken.add(bi);sum+=best}
+  return (sum/qt.length)*(1-Math.min(0.2,(it.length-taken.size)*0.03));
+}
+/* item row: [id,name,variants,unit,by,at,src,dev]   party row: [id,name,place,by,at,src,dev] */
+function buildIndex(){
+  idx=data.items.map(a=>{const raw=[a[1]].concat(a[2]||[]);return{id:a[0],name:a[1],variants:a[2]||[],unit:a[3]||'',by:a[4]||'',at:a[5]||0,src:a[6]||'',dev:a[7]||'',isNew:a[6]==='app',raw:raw,forms:raw.map(toks)}});
+  idx.by=new Map(idx.map(i=>[i.name,i]));
+  pidx=data.parties.map(a=>({id:a[0],name:a[1],place:a[2]||'',by:a[3]||'',at:a[4]||0,src:a[5]||'',dev:a[6]||'',isNew:a[5]==='app',tk:toks(a[1]),tk2:toks(a[1]+' '+(a[2]||''))}));
+}
+/* Items that differ from `last` in only 1–2 size tokens (…x4 → …x5): the "just type 5" shortcut and the chips. */
+function siblings(last,qt){
+  if(!idx)buildIndex();
+  const L=toks(last);if(!L.length)return[];
+  const out=[];
+  idx.forEach(it=>{
+    if(it.name===last)return;
+    const T=it.forms[0];if(T.length!==L.length)return;
+    const diff=[];for(let i=0;i<L.length;i++)if(T[i]!==L[i])diff.push(i);
+    if(!diff.length||diff.length>2)return;
+    if(qt&&qt.length){
+      const dt=diff.map(i=>T[i]);
+      if(!qt.every(q=>T.some(t=>tokScore(q,t)>=0.9)))return;
+      if(!qt.some(q=>dt.some(d=>tokScore(q,d)>=0.9)))return;
+    }
+    let dist=0;diff.forEach(i=>{const a=parseFloat(T[i]),b=parseFloat(L[i]);dist+=(isNaN(a)||isNaN(b))?1000:Math.abs(a-b)});
+    out.push({item:it,diff,pos:diff[diff.length-1]/L.length,dist});
+  });
+  out.sort((a,b)=>a.diff.length-b.diff.length||b.pos-a.pos||a.dist-b.dist||a.item.name.localeCompare(b.item.name,undefined,{numeric:true}));
+  return out;
+}
+function matchItems(text,max,last){
+  if(!idx)buildIndex();
+  const qt=toks(text);if(!qt.length)return[];
+  const map=new Map();
+  idx.forEach(it=>{let b=0,bi=0;it.forms.forEach((f,i)=>{const s=scoreAgainst(qt,f);if(s>b){b=s;bi=i}});if(b>0.3)map.set(it,{item:it,score:b,via:bi>0?it.raw[bi]:null,sib:false})});
+  if(last&&qt.length<=3){
+    siblings(last,qt).forEach(s=>{const bonus=2-s.diff.length*0.1+s.pos*0.01;const e=map.get(s.item);if(e){e.score=bonus;e.sib=true}else map.set(s.item,{item:s.item,score:bonus,via:null,sib:true})});
+  }
+  const res=[...map.values()];
+  res.sort((a,b)=>b.score-a.score||a.item.name.length-b.item.name.length);
+  return res.slice(0,max||8);
+}
+function matchParties(text,max){
+  if(!pidx)buildIndex();
+  const qt=toks(text);if(!qt.length)return[];
+  const res=[];
+  pidx.forEach(p=>{const s=Math.max(scoreAgainst(qt,p.tk),scoreAgainst(qt,p.tk2)*0.95);if(s>0.3)res.push({p,score:s})});
+  res.sort((a,b)=>b.score-a.score);
+  return res.slice(0,max||6);
+}
+/* ENGINE END */
+
+/* ---------- server ---------- */
+function setBadge(t){$('badge').textContent=t}
+function badgeIdle(){
+  const w=pending.length;
+  setBadge(w?w+' waiting to send':(navigator.onLine?'✓ '+data.items.length+' items':'offline · '+data.items.length+' items'));
+}
+async function call(action,extra,ms,pass){
+  if(!cfg.url)throw new Error('No server link');
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),ms||30000);
+  const body=Object.assign({pass:pass||cfg.pass,dev:dev,action:action},extra||{});
+  try{
+    const r=await fetch(cfg.url,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body),signal:ctl.signal});
+    const j=await r.json();
+    if(!j.ok){const e=new Error(j.error||'Server error');e.server=true;e.auth=!!j.auth;throw e}
+    return j;
+  }finally{clearTimeout(to)}
+}
+function loggedIn(){return !!(cfg.url&&cfg.pass&&cfg.user)}
+function reapplyPending(){
+  pending.forEach(p=>{
+    if(p.action==='addItem'&&!data.items.some(a=>key(a[1])===key(p.payload.name)))data.items.push(['tmp-'+uid(),p.payload.name,[],p.payload.unit||'Nos',p.user,Date.now(),'app',dev]);
+    if(p.action==='addParty'&&!data.parties.some(a=>key(a[1])===key(p.payload.name)))data.parties.push(['tmp-'+uid(),p.payload.name,p.payload.place||'',p.user,Date.now(),'app',dev]);
+  });
+}
+async function pull(quiet){
+  if(!loggedIn())return;
+  try{
+    if(!quiet)setBadge('syncing…');
+    const j=await call('pull',{known:data.version||''},45000);
+    if(!j.same){
+      data={items:j.items,parties:j.parties,version:j.version};reapplyPending();jset('data',data);idx=null;pidx=null;
+      renderItem();if(!$('adminView').classList.contains('hide'))paintAdm();
+    }
+    badgeIdle();
+  }catch(e){setBadge(e.server?e.message:(navigator.onLine?'server slow · ':'offline · ')+data.items.length+' items')}
+}
+async function fetchMine(){
+  if(!loggedIn())return;
+  try{const j=await call('myOrders',{},45000);mine=j.orders||[];jset('mine',mine);paintMine();paintPartyHist()}catch(e){}
+}
+async function flush(){
+  if(flushing||!pending.length||!cfg.url)return;
+  flushing=true;let sentOrder=false;
+  try{
+    while(pending.length){
+      const p=pending[0];
+      try{await call(p.action,p.payload,60000,p.pass)}
+      catch(e){
+        if(e.server&&!e.auth&&!/Busy/i.test(e.message)){pending.shift();jset('pending',pending);continue}  // refused for good: drop it
+        throw e;
+      }
+      if(p.action==='order')sentOrder=true;
+      pending.shift();jset('pending',pending);
+    }
+    await pull(true);
+  }catch(e){
+    setBadge(e.auth?e.message+' — open ⚙':pending.length+' waiting to send');
+    if(/Busy/i.test(e.message))setTimeout(flush,3000+Math.random()*4000);   // another phone is saving: try again shortly
+  }
+  flushing=false;paintMine();
+  if(sentOrder)fetchMine();
+}
+function queue(action,payload){pending.push({action,payload,pass:cfg.pass,user:cfg.user});jset('pending',pending);flush()}
+
+/* ---------- login / install / theme ---------- */
+function paintWho(){
+  $('urlWrap').classList.toggle('hide',!!DEFAULT_SERVER_URL);
+  $('loginBox').classList.toggle('hide',loggedIn());
+  $('whoBox').classList.toggle('hide',!loggedIn());
+  $('whoLine').textContent=loggedIn()?'Logged in as '+cfg.user+(cfg.admin?' (office admin)':''):'';
+  $('devLine').textContent='This phone’s id: '+dev;
+  $('sub').textContent='v'+APP_VERSION+(cfg.user?' · '+cfg.user:'');
+  $('btnAdmin').classList.toggle('hide',!(loggedIn()&&cfg.admin));
+}
+function showSetup(on){
+  $('setup').classList.toggle('hide',!on);
+  if(on){$('cfgUrl').value=cfg.url||'';$('cfgPass').value='';paintWho()}
+}
+$('btnSetup').onclick=()=>showSetup($('setup').classList.contains('hide'));
+async function login(){
+  const url=DEFAULT_SERVER_URL||$('cfgUrl').value.trim(),pass=$('cfgPass').value;
+  if(!url){$('cfgMsg').innerHTML='<span class="err">Paste the server link first.</span>';return}
+  if(!pass){$('cfgMsg').innerHTML='<span class="err">Type your password.</span>';return}
+  $('cfgMsg').textContent='Checking…';
+  const old=cfg;cfg={url,pass,user:'',admin:false};
+  try{
+    const j=await call('ping',{},40000);
+    cfg.user=j.user;cfg.admin=!!j.admin;
+    if(old.user&&old.user!==cfg.user){mine=[];jset('mine',mine);order={party:null,lines:[],note:''};saveOrder();paintParty();paintCart()}
+    pending.forEach(p=>{if(p.user===cfg.user)p.pass=cfg.pass});jset('pending',pending);   // a changed password keeps the queue moving
+    jset('cfg',cfg);$('cfgMsg').textContent='';$('cfgPass').value='';
+    paintWho();showSetup(false);data.version='';await pull();flush();fetchMine();
+  }catch(e){
+    cfg=old;$('cfgMsg').innerHTML='<span class="err">'+esc(e.server?e.message:'Could not reach the server. Check the internet and try again.')+'</span>';
+  }
+}
+$('cfgSave').onclick=login;
+$('cfgPass').onkeydown=e=>{if(e.key==='Enter')login()};
+let outSure=false;
+$('btnLogout').onclick=()=>{
+  if(!outSure){outSure=true;$('btnLogout').textContent='Tap again to log out';setTimeout(()=>{outSure=false;$('btnLogout').textContent='Log out'},3000);return}
+  outSure=false;$('btnLogout').textContent='Log out';
+  cfg={url:cfg.url,pass:'',user:'',admin:false};jset('cfg',cfg);mine=[];jset('mine',mine);
+  showView('order');paintWho();paintMine();paintPartyHist();
+};
+function theme(){try{return localStorage.getItem(K+'theme')||'auto'}catch(e){return'auto'}}
+function applyTheme(){const t=theme();if(t==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);$('cfgTheme').textContent='Theme: '+t[0].toUpperCase()+t.slice(1)}
+$('cfgTheme').onclick=()=>{const n={auto:'light',light:'dark',dark:'auto'}[theme()];try{localStorage.setItem(K+'theme',n)}catch(e){}applyTheme()};
+let dip=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('btnInstall').classList.remove('hide')});
+$('btnInstall').onclick=async()=>{if(!dip)return;dip.prompt();try{await dip.userChoice}catch(e){}dip=null;$('btnInstall').classList.add('hide')};
+addEventListener('appinstalled',()=>$('btnInstall').classList.add('hide'));
+const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!standalone)$('iosHint').classList.remove('hide');
+function showView(v){
+  $('orderView').classList.toggle('hide',v!=='order');$('adminView').classList.toggle('hide',v!=='admin');
+  $('btnAdmin').textContent=v==='admin'?'Orders':'Admin';$('btnSend').parentNode.classList.toggle('hide',v==='admin');
+  if(v==='admin'){paintAdm();pull(true)}
+  window.scrollTo(0,0);
+}
+$('btnAdmin').onclick=()=>showView($('adminView').classList.contains('hide')?'admin':'order');
+
+/* ---------- party ---------- */
+function paintParty(){
+  $('partyChip').innerHTML=order.party?'<span class="chip">'+esc(order.party.name)+(order.party.place?' · '+esc(order.party.place):'')+(order.party.isNew?' (new)':'')+'</span> <button class="b sec sm" id="partyChg" type="button">Change</button>':'';
+  $('partyIn').classList.toggle('hide',!!order.party);
+  if(order.party)$('partyChg').onclick=()=>{order.party=null;saveOrder();paintParty();$('partyIn').focus()};
+  paintPartyHist();
+}
+let pm=[];
+function afterParty(){saveOrder();$('partySug').classList.add('hide');$('partyIn').value='';paintParty();if(!$('partyHist').innerHTML)$('itemIn').focus()}
+$('partyIn').oninput=()=>{
+  const q=$('partyIn').value.trim(),box=$('partySug');
+  if(!q){box.classList.add('hide');return}
+  pm=matchParties(q);
+  let h=pm.map((r,i)=>'<button type="button" data-i="'+i+'"><span><b>'+esc(r.p.name)+'</b>'+(r.p.place?' <span class="mut">'+esc(r.p.place)+'</span>':'')+'</span></button>').join('');
+  h+='<button type="button" class="new" data-new="1">+ Save “'+esc(q)+'” as a new party</button>';
+  box.innerHTML=h;box.classList.remove('hide');
+};
+$('partySug').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.new){
+    const nm=$('partyIn').value.replace(/\s+/g,' ').trim();if(!nm)return;
+    order.party={name:nm,place:'',isNew:true};
+    if(!data.parties.some(a=>key(a[1])===key(nm))){data.parties.push(['tmp-'+uid(),nm,'',cfg.user,Date.now(),'app',dev]);pidx=null}
+    queue('addParty',{name:nm,place:''});
+  }else{const p=pm[+b.dataset.i].p;order.party={name:p.name,place:p.place,isNew:p.isNew}}
+  afterParty();
+};
+$('partyIn').onkeydown=e=>{if(e.key==='Enter'&&pm.length&&$('partyIn').value.trim()){const p=pm[0].p;order.party={name:p.name,place:p.place,isNew:p.isNew};afterParty()}};
+
+/* ---------- my orders + repeat ---------- */
+function allMine(){
+  const w=pending.filter(p=>p.action==='order'&&p.user===cfg.user).map(p=>Object.assign({waiting:true},p.payload));
+  const ids=new Set(w.map(o=>o.id));
+  return w.concat(mine.filter(o=>!ids.has(o.id))).sort((a,b)=>b.at-a.at);
+}
+function linesPreview(o){const s=o.lines.map(l=>l.item+' — '+fmtQty(l.qty)+' '+l.unit);return s.slice(0,3).join(' · ')+(s.length>3?' · +'+(s.length-3)+' more':'')}
+function orderCard(o,showParty){
+  return '<div class="line">'+(showParty?'<div class="nm">'+esc(o.party)+'</div>':'')+
+    '<div class="mut">'+stamp(o.at)+' · '+o.lines.length+' item'+(o.lines.length>1?'s':'')+' · '+(o.waiting?'<span class="tag">waiting to reach the server</span>':'<span class="okt">saved ✓</span>')+'</div>'+
+    '<div class="hl">'+esc(linesPreview(o))+(o.note?' · Note: '+esc(o.note):'')+'</div>'+
+    '<div class="row" style="margin-top:6px"><button class="b sm" type="button" data-rep="'+esc(o.id)+'">Repeat this order</button><button class="b sec sm" type="button" data-wa="'+esc(o.id)+'">WhatsApp again</button></div></div>';
+}
+function paintMine(){
+  if(!loggedIn()){$('mine').textContent='Log in to see your orders.';return}
+  const q=key($('mineQ').value);
+  let list=allMine();
+  if(q)list=list.filter(o=>key(o.party).includes(q)||matchParties(q,50).some(r=>key(r.p.name)===key(o.party)));
+  if(!list.length){$('mine').innerHTML='<div class="mut">'+(q?'No orders for this party in the last 3 months.':'Nothing yet.')+'</div>';return}
+  $('mine').innerHTML=list.slice(0,mineShown).map(o=>orderCard(o,true)).join('')+(list.length>mineShown?'<button class="b sec" type="button" id="mineMore" style="width:100%">Show more</button>':'');
+  badgeIdle();
+}
+$('mineQ').oninput=()=>{mineShown=15;paintMine()};
+function paintPartyHist(){
+  const box=$('partyHist');
+  if(!order.party||order.lines.length||!loggedIn()){box.innerHTML='';return}
+  const list=allMine().filter(o=>key(o.party)===key(order.party.name)).slice(0,3);
+  box.innerHTML=list.length?'<div class="ql">Your last orders for this party:</div>'+list.map(o=>orderCard(o,false)).join(''):'';
+}
+function findOrder(id){return allMine().find(o=>o.id===id)}
+function resolveItem(name){
+  if(!idx)buildIndex();
+  if(idx.by.has(name))return idx.by.get(name);
+  const k=key(name);
+  return idx.find(it=>it.raw.some(r=>key(r)===k))||null;   // renamed by the office: the old name is kept as a spelling
+}
+function repeatOrder(o,btn){
+  if(order.lines.length&&!btn.dataset.sure){btn.dataset.sure=1;btn.textContent='Replace current items? Tap again';setTimeout(()=>{delete btn.dataset.sure;btn.textContent='Repeat this order'},3500);return}
+  if(!pidx)buildIndex();
+  const p=pidx.find(x=>key(x.name)===key(o.party));
+  order.party={name:p?p.name:o.party,place:p?p.place:(o.place||''),isNew:p?p.isNew:false};
+  let gone=0;
+  order.lines=o.lines.map(l=>{const it=resolveItem(l.item);if(!it)gone++;return it?{id:uid(),item:it.name,qty:l.qty,unit:l.unit,isNew:it.isNew}:{id:uid(),item:'',raw:l.item,qty:l.qty,unit:l.unit,flag:true}});
+  order.note='';$('noteIn').value='';
+  saveOrder();paintParty();paintCart();
+  $('sendMsg').textContent='Loaded '+o.lines.length+' item(s) from the '+stamp(o.at)+' order — change quantities if needed, then send.'+(gone?' '+gone+' item(s) are no longer in the list: pick them on the orange lines.':'');
+  $('cartCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function histClick(e){
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='mineMore'){mineShown+=15;paintMine();return}
+  const o=findOrder(b.dataset.rep||b.dataset.wa);if(!o)return;
+  if(b.dataset.rep)repeatOrder(o,b);else openWA(orderText(o,o.by||cfg.user,o.at));
+}
+$('mine').onclick=histClick;$('partyHist').onclick=histClick;
+
+/* ---------- item entry ---------- */
+function unitSelect(cur){const u=UNITS.includes(cur)||!cur?UNITS:UNITS.concat([cur]);return u.map(x=>'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>').join('')}
+function renderQuick(){
+  const qk=$('quick');if(!idx)buildIndex();
+  let h='';
+  const sib=lastPick&&idx.by.has(lastPick)?siblings(lastPick,null).slice(0,6):[];
+  if(sib.length)h+='<div class="ql">Like “'+esc(lastPick)+'” — tap, or just type what changes (e.g. “5”)</div><div class="chips">'+sib.map(s=>'<button type="button" class="ch sb" data-n="'+esc(s.item.name)+'">'+esc(s.item.name)+'</button>').join('')+'</div>';
+  const used=new Set(sib.map(s=>s.item.name));
+  const rec=recent.filter(n=>idx.by.has(n)&&!used.has(n)).slice(0,8);
+  if(rec.length)h+='<div class="ql">Recent</div><div class="chips">'+rec.map(n=>'<button type="button" class="ch" data-n="'+esc(n)+'">'+esc(n)+'</button>').join('')+'</div>';
+  qk.innerHTML=h;qk.classList.toggle('hide',!h);
+}
+function renderItem(){
+  const q=$('itemIn').value.trim(),sug=$('itemSug'),qk=$('quick');
+  if(picked){sug.classList.add('hide');qk.classList.add('hide');return}
+  if(!q){sug.classList.add('hide');renderQuick();return}
+  qk.classList.add('hide');
+  curM=matchItems(q,40,lastPick);
+  let h=curM.slice(0,shown).map((r,i)=>'<button type="button" class="sg" data-i="'+i+'"><span class="sn">'+esc(r.item.name)+(r.sib?'<span class="tg sb">like last</span>':'')+(r.item.isNew?'<span class="tg">new</span>':'')+'</span><span class="su">'+esc(r.item.unit)+'</span>'+(r.via?'<span class="sv">= '+esc(r.via)+'</span>':'')+'</button>').join('');
+  if(curM.length>shown)h+='<button type="button" class="more" data-more="1">Show '+(curM.length-shown)+' more</button>';
+  h+='<button type="button" class="new" data-new="1">+ Not in list — save “'+esc(q)+'” as a new item</button>';
+  sug.innerHTML=h;sug.classList.remove('hide');
+}
+$('itemIn').oninput=()=>{picked=null;shown=8;$('pick').classList.add('hide');renderItem()};
+$('itemIn').onfocus=()=>{if(!picked)renderItem()};
+$('itemIn').onkeydown=e=>{if(e.key==='Enter'){const f=$('itemSug').querySelector('.sg');if(f){e.preventDefault();f.click()}}};
+$('quick').onclick=e=>{const b=e.target.closest('button');if(!b||!idx.by.has(b.dataset.n))return;const it=idx.by.get(b.dataset.n);choose({name:it.name,unit:it.unit||'Nos',isNew:it.isNew})};
+$('itemSug').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.more){shown+=15;renderItem();return}
+  if(b.dataset.new){
+    const nm=$('itemIn').value.replace(/\s+/g,' ').trim();if(!nm)return;
+    if(!data.items.some(a=>key(a[1])===key(nm))){data.items.push(['tmp-'+uid(),nm,[],'Nos',cfg.user,Date.now(),'app',dev]);idx=null}
+    queue('addItem',{name:nm,unit:'Nos'});choose({name:nm,unit:'Nos',isNew:true});return;
+  }
+  const r=curM[+b.dataset.i];if(r)choose({name:r.item.name,unit:r.item.unit||'Nos',isNew:r.item.isNew});
+};
+function choose(it){
+  picked=it;$('itemSug').classList.add('hide');$('quick').classList.add('hide');$('pick').classList.remove('hide');
+  $('pickName').textContent=it.name+(it.isNew?' (new item)':'');
+  $('unitIn').innerHTML=unitSelect(it.unit);$('qtyIn').value='';$('qtyIn').focus();
+}
+$('cancelPick').onclick=()=>{picked=null;$('pick').classList.add('hide');$('itemIn').focus();$('itemIn').select();renderItem()};
+function addLine(){
+  if(!picked)return;
+  const q=parseFloat($('qtyIn').value);if(!(q>0)){$('qtyIn').focus();return}
+  const unit=$('unitIn').value;
+  const ex=order.lines.find(l=>l.item===picked.name&&l.unit===unit&&!l.flag);
+  if(ex){ex.qty=Math.round((ex.qty+q)*1000)/1000;$('sendMsg').textContent='Already in the order — quantity added to that line.'}
+  else{order.lines.push({id:uid(),item:picked.name,qty:q,unit:unit,isNew:!!picked.isNew});$('sendMsg').textContent=''}
+  lastPick=picked.name;jset('last',lastPick);
+  recent=[picked.name].concat(recent.filter(n=>n!==picked.name)).slice(0,20);jset('recent',recent);
+  saveOrder();picked=null;$('pick').classList.add('hide');$('itemIn').value='';paintCart();paintPartyHist();renderItem();$('itemIn').focus();
+}
+$('addLine').onclick=addLine;
+$('qtyIn').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addLine()}};
+
+/* ---------- paste a full order ---------- */
+const UN='rolls?|nos?|pcs?|pieces?|bundles?|bdl|sheets?|kgs?|tons?|tonnes?|mtrs?|pkts?|packets?|bags?';
+const UMAP={roll:'Roll',rolls:'Roll',no:'Nos',nos:'Nos',pc:'Nos',pcs:'Nos',piece:'Nos',pieces:'Nos',bundle:'Bundle',bundles:'Bundle',bdl:'Bundle',sheet:'Sheet',sheets:'Sheet',kg:'Kg',kgs:'Kg',ton:'Ton',tons:'Ton',tonne:'Ton',tonnes:'Ton',mtr:'Mtr',mtrs:'Mtr',pkt:'Pkt',pkts:'Pkt',packet:'Pkt',packets:'Pkt',bag:'Pkt',bags:'Pkt'};
+function parseLine(raw){
+  let s=raw.replace(/^[\s\-•*·]*(\d+[.)]\s+)?/,'').trim();if(!s)return null;
+  const m=s.match(new RegExp('[\\s:=\\-–x×]+(\\d+(?:\\.\\d+)?)\\s*('+UN+')?\\s*$','i'));
+  if(!m)return{text:s,qty:null,unit:null};
+  return{text:s.slice(0,m.index).trim(),qty:parseFloat(m[1]),unit:m[2]?UMAP[m[2].toLowerCase()]:null};
+}
+$('pasteGo').onclick=()=>{
+  let n=0;
+  $('pasteTx').value.split(/\n+/).forEach(l=>{
+    const p=parseLine(l);if(!p||!p.text)return;
+    const m2=matchItems(p.text,2,null),top=m2[0],nxt=m2[1];
+    const sure=top&&top.score>=0.85&&(!nxt||top.score-nxt.score>=0.12);
+    order.lines.push({id:uid(),item:sure?top.item.name:'',raw:p.text,qty:p.qty||1,unit:p.unit||(sure&&top.item.unit)||'Nos',flag:!sure,qtyGuess:p.qty==null,isNew:!!(sure&&top.item.isNew)});
+    n++;
+  });
+  $('pasteTx').value='';$('pasteBox').open=false;saveOrder();paintCart();paintPartyHist();
+  $('sendMsg').textContent=n?n+' line(s) read.':'';
+};
+
+/* ---------- cart ---------- */
+function saveOrder(){jset('order',order)}
+function paintCart(){
+  const c=$('cart'),n=order.lines.length;
+  $('cnt').textContent=n?'('+n+')':'';
+  $('btnSend').innerHTML=n?'Send '+n+' item'+(n>1?'s':'')+' to WhatsApp &amp; save':'Send to WhatsApp &amp; save';
+  if(!n){c.innerHTML='<div class="mut">No items yet.</div>';return}
+  c.innerHTML=order.lines.map((l,i)=>{
+    const head=l.flag?'<div class="tag">Pick the right item for: “'+esc(l.raw)+'”</div><div class="sug" id="fs'+i+'"></div>':'<div class="nm">'+(i+1)+'. '+esc(l.item)+(l.isNew?' <span class="tag">(new item)</span>':'')+'</div>'+(l.qtyGuess?'<div class="tag">No quantity found — check it</div>':'');
+    return '<div class="line'+(l.flag?' flag':'')+'">'+head+'<div class="row" style="margin-top:6px;flex-wrap:nowrap"><input class="qty" type="number" inputmode="decimal" value="'+l.qty+'" data-q="'+i+'"><select class="unit" data-u="'+i+'">'+unitSelect(l.unit)+'</select><button class="b sec" type="button" data-x="'+i+'" aria-label="Remove" style="margin-left:auto;padding:8px 14px">✕</button></div></div>';
+  }).join('');
+  c.querySelectorAll('[data-q]').forEach(e=>e.oninput=()=>{const l=order.lines[+e.dataset.q];l.qty=parseFloat(e.value)||0;l.qtyGuess=false;saveOrder()});
+  c.querySelectorAll('[data-u]').forEach(e=>e.onchange=()=>{order.lines[+e.dataset.u].unit=e.value;saveOrder()});
+  c.querySelectorAll('[data-x]').forEach(e=>e.onclick=()=>{order.lines.splice(+e.dataset.x,1);saveOrder();paintCart();paintPartyHist()});
+  order.lines.forEach((l,i)=>{
+    if(!l.flag)return;
+    const box=$('fs'+i),m=matchItems(l.raw,5,null);
+    box.innerHTML=m.map((r,k)=>'<button type="button" class="sg" data-k="'+k+'"><span class="sn">'+esc(r.item.name)+'</span><span class="su">'+esc(r.item.unit)+'</span>'+(r.via?'<span class="sv">= '+esc(r.via)+'</span>':'')+'</button>').join('')+'<button type="button" class="new" data-nw="1">+ Save “'+esc(l.raw)+'” as a new item</button>';
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      if(b.dataset.nw){l.item=l.raw.replace(/\s+/g,' ').trim();l.isNew=true;if(!data.items.some(a=>key(a[1])===key(l.item))){data.items.push(['tmp-'+uid(),l.item,[],l.unit||'Nos',cfg.user,Date.now(),'app',dev]);idx=null}queue('addItem',{name:l.item,unit:l.unit||'Nos'})}
+      else{const it=m[+b.dataset.k].item;l.item=it.name;l.isNew=it.isNew;if(it.unit)l.unit=it.unit}
+      l.flag=false;lastPick=l.item;jset('last',lastPick);saveOrder();paintCart();
+    });
+  });
+}
+$('noteIn').value=order.note||'';
+$('noteIn').oninput=()=>{order.note=$('noteIn').value;saveOrder()};
+
+/* ---------- send ---------- */
+function fmtQty(q){return String(Math.round(q*1000)/1000)}
+function two(n){return String(n).padStart(2,'0')}
+function stamp(at){const d=new Date(at);return two(d.getDate())+'-'+two(d.getMonth()+1)+'-'+d.getFullYear()+' '+two(d.getHours())+':'+two(d.getMinutes())}
+function orderText(o,by,at){
+  const party=typeof o.party==='string'?{name:o.party,place:o.place}:o.party;
+  let t='*ORDER* — '+party.name+(party.place?' ('+party.place+')':'')+'\n'+stamp(at||Date.now())+' · by '+by+'\n\n';
+  o.lines.forEach((l,i)=>{t+=(i+1)+'. '+l.item+' — '+fmtQty(l.qty)+' '+l.unit+'\n'});
+  if(o.note&&o.note.trim())t+='\nNote: '+o.note.trim();
+  return t.trim();
+}
+function check(){
+  const bad=m=>{$('sendMsg').innerHTML='<span class="err">'+m+'</span>';return false};
+  if(!loggedIn()){showSetup(true);window.scrollTo(0,0);return bad('Log in first (⚙).')}
+  if(!order.party){$('partyIn').focus();return bad('Choose the party first.')}
+  if(!order.lines.length)return bad('Add at least one item.');
+  if(order.lines.some(l=>l.flag))return bad('Pick the right item on the orange lines first.');
+  if(order.lines.some(l=>!(l.qty>0)))return bad('A line has no quantity.');
+  return true;
+}
+function openWA(text){const u='https://wa.me/?text='+encodeURIComponent(text);if(!window.open(u,'_blank'))location.href=u}
+$('btnSend').onclick=()=>{
+  if(!check())return;
+  const at=Date.now(),id=uid(),text=orderText(order,cfg.user,at);
+  queue('order',{id,at,party:order.party.name,place:order.party.place||'',note:order.note||'',lines:order.lines.map(l=>({item:l.item,qty:l.qty,unit:l.unit}))});
+  openWA(text);
+  order={party:null,lines:[],note:''};saveOrder();$('noteIn').value='';paintParty();paintCart();paintMine();renderItem();
+  $('sendMsg').textContent='Saved. Choose the WhatsApp group in the app that opened.';
+};
+$('btnCopy').onclick=async()=>{
+  if(!order.party||!order.lines.length){$('sendMsg').innerHTML='<span class="err">Party and items needed first.</span>';return}
+  try{await navigator.clipboard.writeText(orderText(order,cfg.user||'?'));$('sendMsg').textContent='Copied (not saved yet — use Send to save).'}catch(e){$('sendMsg').innerHTML='<span class="err">Copy not allowed on this phone.</span>'}
+};
+let clr=0;
+$('btnClear').onclick=()=>{
+  if(!clr){clr=1;$('btnClear').textContent='Tap again to clear';setTimeout(()=>{clr=0;$('btnClear').textContent='Clear order'},3000);return}
+  order={party:null,lines:[],note:''};saveOrder();$('noteIn').value='';clr=0;$('btnClear').textContent='Clear order';paintParty();paintCart();
+};
+
+/* ---------- office / admin ---------- */
+function metaLine(r){
+  const who=r.src==='app'?'Added by '+(r.by||'?')+(r.dev?' · phone '+r.dev:''):(r.src==='import'?'Imported'+(r.by?' by '+r.by:''):'');
+  return [who,r.at?stamp(r.at):''].filter(Boolean).join(' · ');
+}
+function edCard(kind,r){
+  const item=kind==='item';
+  return '<div class="line" data-k="'+kind+'" data-id="'+esc(r.id)+'"><div class="nm">'+esc(r.name)+(item?' <span class="su">'+esc(r.unit)+'</span>':(r.place?' <span class="mut">· '+esc(r.place)+'</span>':''))+'</div>'+
+    (item&&r.variants.length?'<div class="hl">= '+esc(r.variants.join(' · '))+'</div>':'')+
+    '<div class="mut">'+esc(metaLine(r))+'</div>'+
+    '<div class="row" style="margin-top:6px"><button class="b sec sm" type="button" data-a="edit">Edit</button><button class="b sec sm" type="button" data-a="del">Delete</button></div>'+
+    '<div class="edf hide"><label class="mut">Name</label><input class="en" value="'+esc(r.name)+'">'+
+    (item?'<label class="mut">Other spellings (one per line)</label><textarea class="ev" rows="3">'+esc(r.variants.join('\n'))+'</textarea><label class="mut">Unit</label><select class="eu">'+unitSelect(r.unit||'Nos')+'</select>'
+         :'<label class="mut">Place</label><input class="ep" value="'+esc(r.place)+'">')+
+    '<button class="b" type="button" data-a="save" style="width:100%;margin-top:8px">Save changes</button>'+
+    (item?'<label class="mut">…or it is a duplicate — merge it into the correct item:</label><input class="em" placeholder="Search the correct item" autocomplete="off"><div class="sug emr hide"></div>':'')+
+    '</div></div>';
+}
+function paintAdm(){
+  if(!idx)buildIndex();
+  const k=$('admNewKind').value;
+  const list=(k==='item'?idx:pidx).filter(r=>r.src==='app').sort((a,b)=>b.at-a.at);
+  $('admCnt').textContent='('+idx.filter(r=>r.src==='app').length+' items, '+pidx.filter(r=>r.src==='app').length+' parties)';
+  $('admNew').innerHTML=list.length?list.slice(0,60).map(r=>edCard(k,r)).join(''):'<div class="mut">None.</div>';
+  paintFind();
+}
+function paintFind(){
+  const k=$('admFindKind').value,q=$('admFindQ').value.trim();
+  if(!q){$('admFind').innerHTML='';return}
+  const res=k==='item'?matchItems(q,8,null).map(r=>r.item):matchParties(q,8).map(r=>r.p);
+  $('admFind').innerHTML=res.length?res.map(r=>edCard(k,r)).join(''):'<div class="mut">No match.</div>';
+}
+$('admNewKind').onchange=paintAdm;$('admFindKind').onchange=paintFind;$('admFindQ').oninput=paintFind;
+async function admDo(action,payload,btn,msgEl){
+  try{if(btn)btn.disabled=true;await call(action,payload,60000);data.version='';await pull(true);paintAdm()}
+  catch(e){(msgEl||$('admMsg')).innerHTML='<span class="err">'+esc(e.message)+'</span>';if(btn)btn.disabled=false}
+}
+function admClick(e){
+  const b=e.target.closest('button');if(!b)return;
+  const card=b.closest('[data-id]');if(!card)return;
+  const id=card.dataset.id,kind=card.dataset.k,item=kind==='item';
+  const note=m=>{let el=card.querySelector('.cmsg');if(!el){el=document.createElement('div');el.className='cmsg mut';card.appendChild(el)}el.innerHTML=m;return el};
+  if(id.indexOf('tmp-')===0){note('<span class="err">Still syncing — try again in a moment.</span>');return}
+  if(b.dataset.into)return admDo('adminMergeItem',{id,into:b.dataset.into},b,note(''));
+  if(b.dataset.a==='edit'){card.querySelector('.edf').classList.toggle('hide');return}
+  if(b.dataset.a==='save'){
+    const p={id,name:card.querySelector('.en').value};
+    if(item){p.variants=card.querySelector('.ev').value.split(/\n|;/).map(s=>s.trim()).filter(Boolean);p.unit=card.querySelector('.eu').value}else p.place=card.querySelector('.ep').value;
+    return admDo(item?'adminEditItem':'adminEditParty',p,b,note(''));
+  }
+  if(b.dataset.a==='del'){
+    if(!b.dataset.sure){b.dataset.sure=1;b.textContent='Tap again to delete';setTimeout(()=>{delete b.dataset.sure;b.textContent='Delete'},3000);return}
+    return admDo(item?'adminDeleteItem':'adminDeleteParty',{id},b,note(''));
+  }
+}
+function admInput(e){
+  if(!e.target.classList.contains('em'))return;
+  const card=e.target.closest('[data-id]'),res=card.querySelector('.emr'),q=e.target.value.trim();
+  if(!q){res.classList.add('hide');return}
+  const m=matchItems(q,6,null).filter(r=>r.item.id!==card.dataset.id&&r.item.id.indexOf('tmp-')!==0);
+  res.innerHTML=m.map(r=>'<button type="button" data-into="'+esc(r.item.id)+'"><span class="sn">'+esc(r.item.name)+'</span></button>').join('')||'<div class="mut" style="padding:10px">No match</div>';
+  res.classList.remove('hide');
+}
+$('admNew').onclick=admClick;$('admFind').onclick=admClick;$('admNew').oninput=admInput;$('admFind').oninput=admInput;
+const IMP_HELP={
+  items:['One item per line:  name | other spellings separated by ; | unit','40x40x3mmx12x4 | wm 4mm 4ft; 1x1 4mm 4ft | Sheet\n(Pasting columns straight from Excel also works: name, spellings, unit)'],
+  parties:['One party per line:  name | place','JOSCO HARDWARE VAIKOM | Vaikom']
+};
+function paintImpHelp(){const k=$('admImpKind').value;$('admImpHelp').textContent=IMP_HELP[k][0];$('admImpTx').placeholder=IMP_HELP[k][1]}
+$('admImpKind').onchange=paintImpHelp;
+function parseImport(kind,text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean),cols=l=>l.split(/\t|\|/).map(s=>s.trim());
+  if(kind==='parties')return{parties:lines.map(l=>{const c=cols(l);return{name:c[0],place:c[1]||''}})};
+  return{items:lines.map(l=>{const c=cols(l);return{name:c[0],variants:(c[1]||'').split(';').map(s=>s.trim()).filter(Boolean),unit:c[2]||''}})};
+}
+let impSure=false;
+$('admImpGo').onclick=async()=>{
+  const kind=$('admImpKind').value,mode=$('admImpMode').value,txt=$('admImpTx').value,msg=$('admImpMsg');
+  if(!txt.trim()){msg.innerHTML='<span class="err">Paste something first.</span>';return}
+  if(mode==='replace'&&!impSure){impSure=true;$('admImpGo').textContent='Replace the whole '+kind+' list? Tap again';setTimeout(()=>{impSure=false;$('admImpGo').textContent='Import'},4000);return}
+  impSure=false;$('admImpGo').textContent='Import';msg.textContent='Importing…';
+  try{const j=await call('adminImport',Object.assign({kind,mode},parseImport(kind,txt)),90000);msg.textContent='Done — '+j.added+' added/changed.'+(mode==='replace'?' (The old list is saved in the versions folder.)':'');$('admImpTx').value='';data.version='';await pull(true);paintAdm()}
+  catch(e){msg.innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+};
+function download(name,text){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+}
+const csvCell=v=>{v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+const csv=rows=>rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+$('admDlCsv').onclick=()=>{
+  if(!idx)buildIndex();
+  download('items-'+isoDay(new Date())+'.csv',csv([['Item','Other spellings','Unit','Source','Added by','Phone','Added on']].concat(idx.map(r=>[r.name,r.variants.join('; '),r.unit,r.src,r.by,r.dev,r.at?stamp(r.at):'']))));
+};
+function isoDay(d){return d.toLocaleDateString('en-CA')}
+function setRange(days){$('admFrom').value=isoDay(new Date(Date.now()-(days-1)*864e5));$('admTo').value=isoDay(new Date())}
+$('admToday').onclick=()=>setRange(1);$('admWeek').onclick=()=>setRange(7);
+$('admExport').onclick=async()=>{
+  const from=$('admFrom').value,to=$('admTo').value||from;
+  if(!from){$('admMsg').innerHTML='<span class="err">Choose the dates.</span>';return}
+  $('admMsg').textContent='Fetching orders…';
+  try{
+    const j=await call('adminOrders',{from,to},90000);
+    const rows=[['Time','Salesman','Phone','Party','Place','Item','Qty','Unit','Note']];
+    j.orders.forEach(o=>o.lines.forEach(l=>rows.push([stamp(o.at),o.by,o.dev,o.party,o.place,l.item,l.qty,l.unit,o.note])));
+    $('admMsg').textContent=j.orders.length+' order(s), '+(rows.length-1)+' line(s).';
+    if(rows.length>1)download('orders-'+from+(to!==from?'_to_'+to:'')+'.csv',csv(rows));
+  }catch(e){$('admMsg').innerHTML='<span class="err">'+esc(e.message)+'</span>'}
+};
+
+/* ---------- start ---------- */
+$('aboutLine').textContent='JW Orders v'+APP_VERSION+' · Jain Wire Netting Corporation';
+setRange(1);paintImpHelp();
+applyTheme();paintWho();paintParty();paintCart();paintMine();renderItem();
+if(!loggedIn())showSetup(true);
+pull();flush();fetchMine();
+setInterval(()=>{if(!document.hidden){pull(true);flush()}},45000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){pull(true);flush()}});
+addEventListener('online',()=>{pull(true);flush()});
+addEventListener('offline',badgeIdle);
+if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+</script>
+</body>
+</html>
